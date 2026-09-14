@@ -1,0 +1,67 @@
+/* Operations line — brass conveyor connecting the four business stations */
+.flow-rail {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--flow-cols, 4), minmax(0, 1fr));
+  position: relative;
+}
+.flow-step {
+  position: relative;
+  min-width: 0;
+}
+.flow-step + .flow-step::before {
+  content: '';
+  position: absolute;
+  top: 21px;
+  left: calc(-50% + 26px);
+  right: calc(50% + 26px);
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--brass) 0 8px, transparent 8px 13px);
+  opacity: 0.85;
+}
+.flow-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 0 8px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--r-lg);
+}
+a.flow-inner:hover { text-decoration: none; }
+a.flow-inner:hover .flow-node { border-color: var(--brass); box-shadow: 0 0 0 4px var(--brass-tint); }
+.flow-node {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  border: 2px solid var(--border-strong);
+  color: var(--navy-3);
+  position: relative;
+  z-index: 1;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.flow-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.flow-label { font-size: 12px; color: var(--ink-3); font-weight: 500; }
+.flow-value { font-size: 17px; font-weight: 600; color: var(--ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.flow-sub { font-size: 11.5px; color: var(--ink-3); }
+
+.flow-rail.compact .flow-node { width: 36px; height: 36px; }
+.flow-rail.compact .flow-step + .flow-step::before { top: 17px; left: calc(-50% + 22px); right: calc(50% + 22px); }
+.flow-rail.compact .flow-value { font-size: 15px; }
+
+.flow-rail.dark .flow-node { background: #13254a; border-color: #2a4273; color: #d9e2f2; }
+.flow-rail.dark .flow-label { color: #8e9cb5; }
+.flow-rail.dark .flow-value { color: #fff; }
+.flow-rail.dark .flow-sub { color: #7f8fab; }
+
+@media (max-width: 720px) {
+  .flow-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 18px; }
+  .flow-step:nth-child(odd)::before { display: none; }
+}

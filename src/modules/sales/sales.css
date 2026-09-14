@@ -1,0 +1,52 @@
+/* Sales module layout */
+.sales-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1150px) {
+  .sales-split { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Document trail */
+.trail { list-style: none; margin: 0; padding: 0; }
+.trail-step { position: relative; padding: 0 0 14px 24px; }
+.trail-step::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 16px;
+  bottom: 2px;
+  width: 2px;
+  background: var(--border);
+}
+.trail-step:last-child { padding-bottom: 0; }
+.trail-step:last-child::before { display: none; }
+.trail-dot {
+  position: absolute;
+  left: 0;
+  top: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  background: var(--surface);
+}
+.trail-step.done .trail-dot { border-color: var(--brass); background: var(--brass); box-shadow: inset 0 0 0 2px #fff; }
+.trail-label { font-size: 12px; color: var(--ink-3); font-weight: 500; margin-bottom: 2px; }
+.trail-doc {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  flex-wrap: wrap;
+}
+.trail-doc.current { background: var(--blue-tint); margin: 0 -6px; padding: 3px 6px; border-radius: 5px; }
+
+.invoice-paper-wrap { overflow-x: auto; }
+.invoice-paper-wrap .doc-paper { max-width: none; }
+
+.qty-input { width: 100px; }
+.pre-line { white-space: pre-line; color: var(--ink-2); font-size: 12.8px; line-height: 1.6; }

@@ -1,0 +1,57 @@
+/* Inventory module layout helpers */
+.inv-three {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.1fr);
+  margin-bottom: 16px;
+}
+@media (max-width: 1280px) {
+  .inv-three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .inv-three > :last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .inv-three { grid-template-columns: minmax(0, 1fr); }
+}
+
+.wh-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  background: transparent;
+  text-align: left;
+}
+.wh-row:hover { background: var(--surface-2); border-color: var(--border); }
+.wh-row.active { background: var(--blue-tint); border-color: var(--blue-line); }
+.wh-row .progress { grid-column: 1 / -1; }
+
+.low-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.low-row:last-child { border-bottom: 0; }
+
+.ledger-summary {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px 20px;
+}
+@media (max-width: 1100px) { .ledger-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .ledger-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.impact-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+.impact-row:last-child { border-bottom: 0; }
+@media (max-width: 600px) { .impact-row { grid-template-columns: minmax(0, 1fr); gap: 4px; } }

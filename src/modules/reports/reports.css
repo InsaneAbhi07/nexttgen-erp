@@ -1,0 +1,72 @@
+/* Reports module (frontend-only demo) */
+
+.reports-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.reports-groups-scroll { overflow-x: auto; max-width: 100%; }
+
+.reports-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1000px) { .reports-groups { grid-template-columns: minmax(0, 1fr); } }
+
+.report-group-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.report-count {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ink-3);
+  background: var(--surface-3);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.report-list { list-style: none; margin: 0; padding: 6px; }
+.report-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: var(--r-md);
+  color: inherit;
+}
+.report-link:hover { background: var(--surface-2); text-decoration: none; }
+.report-link:hover .report-link-title { color: var(--blue); }
+.report-link-title { display: block; font-weight: 500; color: var(--ink); font-size: 13px; }
+.report-link-desc { display: block; font-size: 12px; color: var(--ink-3); }
+.report-link-chev { color: var(--ink-4); flex-shrink: 0; }
+
+.report-filter-body { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 14px; }
+.report-period { white-space: nowrap; }
+
+.report-print-head {
+  display: none;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  border-bottom: 2px solid var(--navy);
+}
+.report-print-company { font-size: 16px; font-weight: 700; color: var(--navy); }
+.report-print-title { text-align: right; }
+
+@media print {
+  .report-print-head { display: flex; }
+  /* The sheet is the print root; nested print areas (table wraps) flow normally */
+  .report-sheet .print-area { position: static !important; }
+  .report-sheet .card { box-shadow: none; break-inside: avoid; }
+  .report-sheet .report-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .report-sheet .table th { position: static; }
+}

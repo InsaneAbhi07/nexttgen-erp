@@ -1,0 +1,34 @@
+/* Dashboard-specific layout (frontend-only demo) */
+.dash-stack { display: flex; flex-direction: column; gap: 16px; }
+.dash-rail-card .card-body { padding: 18px 16px 20px; }
+
+.dash-rank { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.dash-rank li { display: flex; gap: 12px; align-items: flex-start; }
+.dash-rank-no {
+  width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+  display: grid; place-items: center; font-size: 11.5px; font-weight: 600;
+  background: var(--surface-3); color: var(--ink-2);
+}
+.dash-rank li:first-child .dash-rank-no { background: var(--brass-tint); color: #8a6417; }
+
+.dash-donut { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.dash-donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+.dash-donut-list { list-style: none; margin: 0; padding: 0; flex: 1; min-width: 160px; display: flex; flex-direction: column; gap: 8px; }
+.dash-donut-list li { display: flex; align-items: center; gap: 8px; font-size: 12.8px; color: var(--ink-2); padding-bottom: 7px; border-bottom: 1px solid var(--border); }
+.dash-donut-list li:last-child { border-bottom: 0; }
+.dash-donut-list .sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+.dash-list-row { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+.dash-list-row:last-child { border-bottom: 0; }
+.dash-list-row:hover { background: var(--surface-2); }
+
+.dash-mini-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.dash-mini-kpi { padding: 10px 12px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--border); }
+.dash-mini-kpi .v { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.dash-mini-kpi .l { font-size: 11.5px; color: var(--ink-3); }
+
+@media (max-width: 640px) {
+  .dash-header-controls { width: 100%; }
+  .dash-header-controls .segmented { flex: 1; }
+  .dash-header-controls .segmented button { flex: 1; }
+}

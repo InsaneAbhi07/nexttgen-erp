@@ -1,0 +1,120 @@
+/* NexttGen ERP — printable document (invoice / PO / quotation) styles */
+
+.doc-paper {
+  background: #fff;
+  color: #1b2333;
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.doc-paper .doc-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  padding: 20px 22px 16px;
+  border-bottom: 2px solid var(--navy);
+}
+.doc-company-name { font-size: 18px; font-weight: 700; color: var(--navy); letter-spacing: -0.01em; }
+.doc-company-meta { color: #4a5568; font-size: 11.5px; margin-top: 3px; max-width: 46ch; }
+.doc-type {
+  text-align: right;
+}
+.doc-type-title { font-size: 17px; font-weight: 700; letter-spacing: 0.02em; color: var(--navy); }
+.doc-type-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+.doc-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid #d6dce5;
+}
+.doc-meta > div { padding: 12px 22px; }
+.doc-meta > div + div { border-left: 1px solid #d6dce5; }
+.doc-meta-label { font-size: 10.5px; color: #6b7280; font-weight: 600; margin-bottom: 4px; }
+.doc-party-name { font-weight: 600; font-size: 13px; color: #111827; }
+.doc-kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; }
+.doc-kv dt { color: #6b7280; }
+.doc-kv dd { margin: 0; font-weight: 500; text-align: right; }
+
+.doc-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.doc-table th {
+  background: #eef2f7;
+  color: #374151;
+  font-weight: 600;
+  text-align: left;
+  padding: 7px 8px;
+  border-bottom: 1px solid #cfd6e1;
+  border-top: 1px solid #cfd6e1;
+  white-space: nowrap;
+}
+.doc-table td { padding: 7px 8px; border-bottom: 1px solid #e5e9f0; vertical-align: top; }
+.doc-table .r { text-align: right; font-variant-numeric: tabular-nums; }
+.doc-table .c { text-align: center; }
+.doc-table tfoot td { font-weight: 600; background: #f7f9fc; border-bottom: 1px solid #cfd6e1; }
+
+.doc-bottom {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  border-bottom: 1px solid #d6dce5;
+}
+.doc-bottom > div { padding: 12px 22px; }
+.doc-bottom > div + div { border-left: 1px solid #d6dce5; }
+.doc-totals .t-row { display: flex; justify-content: space-between; padding: 3px 0; font-variant-numeric: tabular-nums; }
+.doc-totals .t-row.grand { border-top: 1px solid #1b2333; margin-top: 6px; padding-top: 7px; font-size: 14px; font-weight: 700; }
+.doc-words { font-weight: 600; margin-top: 2px; }
+.doc-tax-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+.doc-tax-table th, .doc-tax-table td { border: 1px solid #dde3ec; padding: 4px 6px; text-align: right; }
+.doc-tax-table th { background: #f3f6fa; font-weight: 600; }
+.doc-tax-table th:first-child, .doc-tax-table td:first-child { text-align: left; }
+
+.doc-foot {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 16px;
+  padding: 14px 22px 22px;
+}
+.doc-terms { font-size: 11px; color: #4a5568; white-space: pre-line; }
+.doc-sign { text-align: right; display: flex; flex-direction: column; justify-content: space-between; min-height: 110px; }
+.doc-sign .sign-line { border-top: 1px solid #1b2333; padding-top: 4px; font-size: 11px; margin-top: 44px; }
+.doc-stamp {
+  display: inline-block;
+  border: 1.5px solid var(--green);
+  color: var(--green);
+  font-weight: 700;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  transform: rotate(-4deg);
+  letter-spacing: 0.04em;
+}
+.doc-footer-note { text-align: center; font-size: 10.5px; color: #6b7280; padding: 8px; border-top: 1px dashed #d6dce5; }
+
+@media (max-width: 700px) {
+  .doc-paper .doc-head, .doc-meta, .doc-bottom, .doc-foot { grid-template-columns: 1fr; }
+  .doc-meta > div + div, .doc-bottom > div + div { border-left: 0; border-top: 1px solid #d6dce5; }
+  .doc-type { text-align: left; }
+}
+
+/* Print: only the document area is printed */
+@media print {
+  @page { size: A4; margin: 10mm; }
+  body { background: #fff !important; }
+  body * { visibility: hidden !important; }
+  .print-area, .print-area * { visibility: visible !important; }
+  .print-area {
+    position: absolute !important;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  .overlay { position: static !important; background: transparent !important; padding: 0 !important; overflow: visible !important; }
+  .modal { box-shadow: none !important; max-height: none !important; }
+  .modal-body { overflow: visible !important; }
+  .no-print { display: none !important; }
+  .table-wrap { overflow: visible !important; }
+}

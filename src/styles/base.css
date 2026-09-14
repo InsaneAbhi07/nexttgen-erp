@@ -1,0 +1,181 @@
+/* NexttGen ERP — design tokens & base styles (frontend-only demo) */
+
+:root {
+  /* Surfaces */
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --surface-3: #eef2f6;
+  --border: #e2e7ee;
+  --border-strong: #cdd5e0;
+
+  /* Ink */
+  --ink: #1a2436;
+  --ink-2: #475467;
+  --ink-3: #7a8699;
+  --ink-4: #a3adbb;
+
+  /* Navy sidebar */
+  --navy: #0f1e36;
+  --navy-2: #16284a;
+  --navy-3: #1f3561;
+  --navy-line: rgba(255, 255, 255, 0.07);
+  --navy-ink: #a9b6cc;
+
+  /* Brand */
+  --blue: #1f5fd6;
+  --blue-hover: #184fb5;
+  --blue-tint: #e9f0fd;
+  --blue-line: #bcd0f5;
+  --brass: #c9962f;
+  --brass-tint: #fbf3e2;
+
+  /* Status */
+  --green: #177a52;
+  --green-tint: #e5f4ec;
+  --amber: #a4670b;
+  --amber-tint: #fdf1d9;
+  --red: #c23b32;
+  --red-tint: #fce9e7;
+  --violet: #5f45c4;
+  --violet-tint: #efebfb;
+  --teal: #0e7c86;
+  --teal-tint: #e0f3f4;
+  --gray-tint: #eef1f5;
+
+  /* Shape */
+  --r-sm: 5px;
+  --r-md: 7px;
+  --r-lg: 10px;
+  --r-xl: 14px;
+
+  --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.06), 0 1px 2px rgba(16, 24, 40, 0.03);
+  --shadow-pop: 0 14px 36px -10px rgba(15, 30, 54, 0.28), 0 2px 6px rgba(15, 30, 54, 0.06);
+
+  --font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+
+  --sidebar-w: 244px;
+  --sidebar-w-collapsed: 64px;
+  --topbar-h: 58px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, p {
+  margin: 0;
+}
+
+a {
+  color: var(--blue);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--blue-tint);
+}
+
+/* Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+/* ---------- Utilities ---------- */
+.mono { font-family: var(--mono); font-size: 0.94em; letter-spacing: -0.01em; }
+.muted { color: var(--ink-3); }
+.ink-2 { color: var(--ink-2); }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.nowrap { white-space: nowrap; }
+.num { font-variant-numeric: tabular-nums; }
+.strong { font-weight: 600; }
+.small { font-size: 12px; }
+.tiny { font-size: 11px; }
+.text-green { color: var(--green); }
+.text-red { color: var(--red); }
+.text-amber { color: var(--amber); }
+.text-blue { color: var(--blue); }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.row { display: flex; align-items: center; gap: 8px; }
+.row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.row-wrap { flex-wrap: wrap; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.stack-sm { display: flex; flex-direction: column; gap: 8px; }
+.gap-lg { gap: 20px; }
+.grow { flex: 1; min-width: 0; }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mb-16 { margin-bottom: 16px; }
+
+.grid { display: grid; gap: 16px; }
+.grid-2 { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-3 { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-4 { display: grid; gap: 16px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.grid-5 { display: grid; gap: 14px; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.span-2 { grid-column: span 2; }
+.span-3 { grid-column: span 3; }
+.span-full { grid-column: 1 / -1; }
+
+@media (max-width: 1200px) {
+  .grid-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .span-3 { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .grid-2, .grid-3, .grid-4, .grid-5 { grid-template-columns: minmax(0, 1fr); }
+  .span-2, .span-3 { grid-column: 1 / -1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

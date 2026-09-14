@@ -1,0 +1,44 @@
+/* Purchase module — local layout helpers (frontend-only demo) */
+.pur-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .pur-top { grid-template-columns: minmax(0, 1fr); }
+}
+
+.pur-trail { list-style: none; margin: 0; padding: 0; }
+.pur-trail-step { position: relative; display: flex; gap: 12px; padding-bottom: 14px; }
+.pur-trail-step:last-child { padding-bottom: 0; }
+.pur-trail-step::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 16px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--border);
+}
+.pur-trail-step:last-child::after { display: none; }
+.pur-trail-step.done::after { background: var(--blue-line); }
+.pur-trail-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  background: var(--surface);
+  margin-top: 3px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.pur-trail-step.done .pur-trail-dot { border-color: var(--blue); background: var(--blue); }
+.pur-trail-body { min-width: 0; flex: 1; }
+.pur-trail-doc { gap: 8px; margin-top: 3px; }
+.pur-trail-doc.current .doc-no { background: var(--blue-tint); color: var(--blue); padding: 1px 6px; border-radius: 4px; }
+
+.pur-qty-input { width: 104px; }
+.pur-lines td { vertical-align: middle; }
+.pur-lines .input { height: 32px; font-size: 12.5px; }

@@ -1,0 +1,89 @@
+/* Login — navy blueprint panel + form */
+.login-visual {
+  position: relative;
+  background-color: var(--navy);
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 96px 96px, 96px 96px, 24px 24px, 24px 24px;
+  color: #fff;
+  padding: 40px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  overflow: hidden;
+}
+.login-brand { display: flex; align-items: center; gap: 12px; }
+.login-brand-name { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+.login-brand-name b { color: var(--brass); font-weight: 600; }
+.login-brand-sub { font-size: 12.5px; color: #93a1ba; }
+
+.login-copy { margin-top: auto; max-width: 30ch; }
+.login-copy h1 {
+  font-size: clamp(28px, 3vw, 38px);
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.login-copy p { color: #a9b6cc; font-size: 15px; margin-top: 14px; line-height: 1.55; max-width: 44ch; }
+
+.login-plant {
+  border: 1px solid #22375f;
+  background: rgba(15, 30, 54, 0.75);
+  border-radius: var(--r-xl);
+  padding: 18px 18px 20px;
+}
+.login-plant-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+  color: #a9b6cc;
+  margin-bottom: 18px;
+}
+.login-live {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(201, 150, 47, 0.16);
+  color: #e2bb6a;
+}
+
+.login-form-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  background: var(--surface);
+}
+.login-form { width: 100%; max-width: 392px; }
+.login-title { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 4px; }
+.login-mobile-brand { display: none; align-items: center; gap: 10px; margin-bottom: 26px; }
+@media (max-width: 960px) { .login-mobile-brand { display: flex; } }
+
+.login-demo {
+  margin-top: 24px;
+  padding: 14px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+.login-demo-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+@media (max-width: 420px) { .login-demo-list { grid-template-columns: 1fr; } }
+.login-demo-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  min-width: 0;
+}
+.login-demo-item .tiny { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.login-demo-item:hover { border-color: var(--blue-line); }
+.login-demo-item.active { border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue-tint); }

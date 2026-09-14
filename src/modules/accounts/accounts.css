@@ -1,0 +1,8 @@
+/* Accounts module styles (frontend-only demo) */
+.bucket-active {
+  border-color: var(--blue) !important;
+  box-shadow: 0 0 0 2px var(--blue-tint) !important;
+}
+.cash-account .card-title { display: flex; align-items: center; }
+.ledger-party { min-width: 240px; }
+@media (max-width: 640px) { .ledger-party { min-width: 0; width: 100%; } }

@@ -1,0 +1,95 @@
+/* Production module — brass accents for manufacturing highlights */
+
+.prd-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1150px) {
+  .prd-split { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Status stepper (a real sequence, so numbered) */
+.prd-stepper {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+.prd-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-3);
+  position: relative;
+  min-width: 0;
+}
+.prd-step::before {
+  content: '';
+  position: absolute;
+  top: 13px;
+  left: -50%;
+  right: 50%;
+  height: 2px;
+  background: var(--border);
+}
+.prd-step:first-child::before { display: none; }
+.prd-step.done::before,
+.prd-step.current::before { background: var(--brass); }
+.prd-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: 12px;
+  position: relative;
+  z-index: 1;
+}
+.prd-step.done .prd-dot { background: var(--brass); border-color: var(--brass); color: #fff; }
+.prd-step.current .prd-dot { border-color: var(--brass); color: #8a6417; box-shadow: 0 0 0 4px var(--brass-tint); }
+.prd-step.current { color: var(--ink); font-weight: 500; }
+.prd-stepper.cancelled .prd-step.done .prd-dot { background: var(--ink-4); border-color: var(--ink-4); }
+.prd-stepper.cancelled .prd-step::before { background: var(--border); }
+@media (max-width: 560px) {
+  .prd-step span:last-child { font-size: 10.5px; }
+}
+
+/* Cost rows with inline bars */
+.prd-cost-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.prd-cost-row:last-child { border-bottom: 0; }
+.prd-cost-row .bar { grid-column: 1 / -1; height: 5px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.prd-cost-row .bar > span { display: block; height: 100%; border-radius: inherit; }
+.prd-cost-row.total { font-weight: 600; font-size: 14px; border-top: 1px solid var(--border-strong); border-bottom: 0; }
+
+.prd-legend { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; }
+.prd-legend-row { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+.prd-legend-row .sw { width: 10px; height: 10px; border-radius: 3px; }
+
+.prd-order-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--brass-tint);
+  border: 1px solid #efdcb3;
+}
+@media (max-width: 720px) { .prd-order-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.prd-hero-value { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
