@@ -14,6 +14,21 @@ npm run dev      # http://localhost:5173
 npm run build    # production build in dist/
 ```
 
+## Live demo
+
+https://insaneabhi07.github.io/nexttgen-erp/
+
+The site is served from the `gh-pages` branch. To publish changes (Git Bash):
+
+```bash
+MSYS_NO_PATHCONV=1 BASE_PATH=/nexttgen-erp/ npx vite build
+cp dist/index.html dist/404.html && touch dist/.nojekyll
+cd dist && git init -b gh-pages && git add -A && git commit -m "Deploy" \
+  && git push -f https://github.com/InsaneAbhi07/nexttgen-erp.git gh-pages && rm -rf .git
+```
+
+`404.html` lets deep links such as `/nexttgen-erp/sales/invoices` work on refresh.
+
 ## Demo login
 
 | Role | Email | Password |
