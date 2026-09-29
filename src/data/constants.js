@@ -39,6 +39,25 @@ export const GST_RATES = [0, 5, 12, 18, 28]
 export const PRODUCT_TYPES = ['Finished Good', 'Raw Material', 'Trading Goods', 'Semi Finished', 'Consumable', 'Packaging Material']
 export const PRIORITIES = ['Low', 'Medium', 'High', 'Urgent']
 export const WASTAGE_TYPES = ['Wastage', 'Rejection', 'Damage', 'Scrap']
+
+/* Lock & handle manufacturing — process stages, job work, QC, variants */
+export const PROCESS_STAGES = ['Die Casting', 'Machining', 'Buffing & Polishing', 'Plating', 'Assembly', 'Final QC', 'Packing']
+export const WORK_CENTRES = {
+  'Die Casting': ['Die-casting M/C 1 (80T)', 'Die-casting M/C 2 (120T)'],
+  Machining: ['CNC Lathe Bay', 'Drilling & Tapping Line', 'Power Press 40T'],
+  'Buffing & Polishing': ['Buffing Line A', 'Buffing Line B'],
+  Plating: ['Plating Shop (in-house)'],
+  Assembly: ['Lock Assembly Line', 'Handle Assembly Table'],
+  'Final QC': ['QC Bench'],
+  Packing: ['Packing Section'],
+}
+export const JOB_WORK_PROCESSES = ['Nickel Plating', 'Chrome Plating', 'Antique Finish', 'Buffing & Polishing', 'Powder Coating', 'Heat Treatment']
+export const OPERATION_MODES = ['In-house', 'Job Work']
+export const QC_TYPES = ['Incoming', 'Job Work', 'In-process', 'Final']
+export const QC_RESULTS = ['Accepted', 'Accepted with Deviation', 'Rework', 'Rejected']
+export const QC_INSPECTORS = ['Deepak Chauhan', 'Suresh Yadav', 'Mohd. Irfan']
+export const JOB_WORK_WAREHOUSE = 'wh-jbw'
+export const SCRAP_WAREHOUSE = 'wh-scr'
 export const DEPARTMENTS = ['Management', 'Operations', 'Accounts', 'Purchase', 'Sales', 'Stores', 'Production', 'Quality', 'Maintenance', 'Packaging']
 export const SALES_PERSONS = ['Neha Gupta', 'Karan Singh', 'Arjun Mehra']
 export const TRANSPORTERS = ['VRL Logistics', 'Gati Ltd.', 'TCI Freight', 'Safexpress', 'Own Vehicle', 'Delhivery Freight']
@@ -55,7 +74,7 @@ export const ROLES = [
   'Employee',
 ]
 
-export const PERMISSION_MODULES = ['Dashboard', 'Masters', 'Purchase', 'Sales', 'Inventory', 'Production', 'Accounts', 'Reports', 'Users & Access', 'Settings']
+export const PERMISSION_MODULES = ['Dashboard', 'Masters', 'Purchase', 'Sales', 'Inventory', 'Production', 'Quality', 'Accounts', 'Reports', 'Users & Access', 'Settings']
 export const PERMISSION_TYPES = ['view', 'add', 'edit', 'delete', 'approve', 'print', 'export']
 
 export const STATUS = {
@@ -69,5 +88,7 @@ export const STATUS = {
   productionOrder: ['Planned', 'Released', 'In Progress', 'Completed', 'Cancelled'],
   bom: ['Active', 'Draft', 'Inactive'],
   transfer: ['In Transit', 'Received'],
+  jobWork: ['Sent', 'Partially Received', 'Received', 'Closed'],
+  qcResult: ['Accepted', 'Accepted with Deviation', 'Rework', 'Rejected'],
   payment: ['Paid', 'Partially Paid', 'Unpaid', 'Overdue'],
 }

@@ -21,6 +21,7 @@ import BrandMark from '../layout/BrandMark.jsx'
  *  shipTo: { heading, name, address } optional
  *  lines: [{ itemId, qty, rate, discount, gst }]   (tax layout)
  *  columns: [{ header, render(line, item, idx), align }]   (simple layout — no tax columns/totals)
+ *  descriptionHeader, describe(line, item)                 optional override of the first column (e.g. QC checks)
  *  totals, interState, notes, terms, stamp ('PAID'), showBank, signLabel
  */
 export function DocumentPaper({
@@ -34,6 +35,8 @@ export function DocumentPaper({
   shipTo,
   lines = [],
   columns,
+  descriptionHeader = 'Description of goods',
+  describe,
   totals,
   interState = false,
   notes,
@@ -138,7 +141,7 @@ export function DocumentPaper({
           <thead>
             <tr>
               <th className="c" style={{ width: 28 }}>#</th>
-              <th>Description of goods</th>
+              <th>{descriptionHeader}</th>
               {columns
                 ? columns.map((col) => (
                     <th key={col.header} className={col.align === 'right' ? 'r' : col.align === 'center' ? 'c' : ''}>
@@ -169,8 +172,14 @@ export function DocumentPaper({
                 <tr key={l.id || idx}>
                   <td className="c">{idx + 1}</td>
                   <td>
-                    <div style={{ fontWeight: 600 }}>{it?.name || 'Item'}</div>
-                    <div style={{ color: '#6b7280', fontSize: 10.5 }}>{it?.code}</div>
+                    {describe ? (
+                      describe(l, it)
+                    ) : (
+                      <>
+                        <div style={{ fontWeight: 600 }}>{it?.name || 'Item'}</div>
+                        <div style={{ color: '#6b7280', fontSize: 10.5 }}>{it?.code}</div>
+                      </>
+                    )}
                   </td>
                   {columns ? (
                     columns.map((col) => (

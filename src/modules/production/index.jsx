@@ -1,6 +1,6 @@
 /**
  * Production module routes — BOM, production orders, material issue,
- * production entry, costing and wastage. Frontend-only demo (mock store).
+ * production entry, costing, wastage, process routes, shop-floor WIP and job work. Frontend-only demo (mock store).
  */
 import { Navigate, Route, Routes } from 'react-router-dom'
 import NotFound from '../../pages/NotFound.jsx'
@@ -18,6 +18,11 @@ import EntryForm from './EntryForm.jsx'
 import EntryView from './EntryView.jsx'
 import CostingPage from './CostingPage.jsx'
 import WastagePage from './WastagePage.jsx'
+import RoutingPage from './RoutingPage.jsx'
+import ShopFloorPage from './ShopFloorPage.jsx'
+import JobWorkList from './JobWorkList.jsx'
+import JobWorkForm from './JobWorkForm.jsx'
+import JobWorkView from './JobWorkView.jsx'
 import './production.css'
 
 export default function ProductionModule() {
@@ -40,6 +45,11 @@ export default function ProductionModule() {
       <Route path="entries/:id" element={<EntryView />} />
       <Route path="costing" element={<CostingPage />} />
       <Route path="wastage" element={<WastagePage />} />
+      <Route path="routings" element={<RoutingPage />} />
+      <Route path="shop-floor" element={<ShopFloorPage />} />
+      <Route path="job-work" element={<JobWorkList />} />
+      <Route path="job-work/new" element={<JobWorkForm key="new" />} />
+      <Route path="job-work/:id" element={<JobWorkView />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   )

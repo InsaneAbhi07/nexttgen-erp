@@ -43,11 +43,12 @@ Use **Demo walkthrough** in the sidebar for the guided client flow, and **Reset 
 ## What's inside
 
 - **Dashboards** — Owner, Admin and Manager views driven by live mock data
-- **Masters** — items, categories, brands, units, warehouses, customers, suppliers
+- **Masters** — items, product variants (finish × size matrix), categories, brands, units, warehouses, customers, suppliers and job workers
 - **Purchase** — requisition, purchase order, GRN, purchase invoice, purchase return
 - **Sales** — quotation, sales order, delivery challan, GST tax invoice, sales return
 - **Inventory** — stock overview, stock in/out, transfers, adjustments, stock ledger
-- **Production** — BOM builder, production orders, material issue, production entry, costing, wastage
+- **Production** — BOM builder, process routes (die casting → machining → buffing → plating → assembly → final QC → packing), production orders, shop-floor WIP board with stage-wise output, material issue, production entry, job work (plating / buffing / heat treatment challans and receipts), costing, wastage
+- **Quality** — incoming, job work, in-process and final inspections with checklists, AQL sample size, accept / reject / rework, pending-inspection queue and supplier rejection analysis
 - **Accounts** — receipts, payments, customer/supplier ledgers, outstanding, cash & bank
 - **Reports** — 30 sales, purchase, inventory, production, accounts and GST reports with Excel (CSV) / PDF (print) export
 - **Users & access** — users, roles and permission matrix; company, tax, invoice and payment-term settings
@@ -60,6 +61,7 @@ Use **Demo walkthrough** in the sidebar for the guided client flow, and **Reset 
 | `src/store/ErpStore.jsx` | React context holding all collections; persists to localStorage |
 | `src/store/stockEngine.js` | Turns GRNs, issues, production, challans… into stock moves and syncs workflow statuses |
 | `src/store/selectors.js` | Stock balances, ledgers, outstanding, costing — all derived in the browser |
+| `src/store/mfg.js` | Lock & handle manufacturing helpers: stage-wise WIP, job work balances, QC plans and pending queue, variant naming and pricing |
 | `src/components/ui` | Reusable UI kit (DataTable, Modal, Drawer, FormField, DatePicker, Toast, ConfirmDialog…) |
 | `src/modules/*` | One folder per ERP module with its own nested routes |
 

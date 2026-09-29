@@ -1,13 +1,15 @@
 /** Production order cockpit — status, materials, output, cost. Frontend-only demo. */
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Ban, Calculator, CheckCircle2, ChevronDown, Factory, Gauge, PackageCheck, PackageOpen, Pencil, Percent, Play, Printer, Recycle, Target, XCircle } from 'lucide-react'
+import { Ban, Calculator, CheckCircle2, ChevronDown, ClipboardCheck, Factory, Gauge, PackageCheck, PackageOpen, Pencil, Percent, Play, Printer, Recycle, Route, Send, Target, Workflow, XCircle } from 'lucide-react'
 import { useErp } from '../../store/ErpStore.jsx'
 import { useAuth } from '../../store/AuthContext.jsx'
 import { byId, productionCosting, productionProgress, requiredMaterials } from '../../store/selectors.js'
 import { fmtDate, inr, inr2, num, pct, today } from '../../utils/format.js'
 import { usePageTitle } from '../../utils/hooks.js'
-import { Button, Callout, Card, DocNo, Dropdown, KeyValue, PageHeader, Progress, StatCard, StatusBadge, useConfirm, useToast } from '../../components/ui/index.js'
+import { Button, Callout, Card, DocNo, Dropdown, EmptyState, KeyValue, PageHeader, Progress, StatCard, StatusBadge, useConfirm, useToast } from '../../components/ui/index.js'
+import { currentStageIndex, jobWorkBalance, stageProgress } from '../../store/mfg.js'
+import StageEntryDrawer from './StageEntryDrawer.jsx'
 import DocumentPreview from '../../components/common/DocumentPreview.jsx'
 import { CRUMB, MiniTable, MissingRecord, Stepper, orderStage } from './shared.jsx'
 
@@ -19,6 +21,7 @@ export default function OrderView() {
   const toast = useToast()
   const confirm = useConfirm()
   const [printing, setPrinting] = useState(false)
+  const [stageDrawer, setStageDrawer] = useState(null)
   const order = get('productionOrders', id)
   usePageTitle(order ? order.number : 'Production order')
   if (!order) return <MissingRecord label="Production order" backTo="/production/orders" />
@@ -45,6 +48,12 @@ export default function OrderView() {
   const yieldPct = prog.produced ? (prog.good / prog.produced) * 100 : 0
   const overdue = open && order.expectedDate < today()
   const unit = product?.unit || ''
+  const route = stageProgress(state, order)
+  const curStage = currentStageIndex(route)
+  const suppliers = byId(state.suppliers)
+  const jobWorks = (state.jobWorkOrders || []).filter((j) => j.productionOrderId === order.id).sort((a, b) => (a.date < b.date ? 1 : -1))
+  const inspections = (state.qcInspections || []).filter((q) => q.productionOrderId === order.id).sort((a, b) => (a.date < b.date ? 1 : -1))
+  const qcLink = (type) => `/quality/inspections/new?type=${type}&ref=productionOrders&refId=${order.id}&item=${order.productId}`
 
   const release = () => {
     patch('productionOrders', order.id, { status: 'Released' }, { action: 'released' })
@@ -66,6 +75,9 @@ export default function OrderView() {
 
   const moreItems = [
     { label: 'Print job card', icon: Printer, onClick: () => setPrinting(true) },
+    can('Production', 'add') && running && route.length > 0 && { label: 'Record stage output', icon: Workflow, onClick: () => setStageDrawer({}) },
+    can('Production', 'add') && !cancelled && { label: 'Send for job work', icon: Send, to: `/production/job-work/new?order=${order.id}` },
+    can('Quality', 'add') && !cancelled && { label: 'Final inspection', icon: ClipboardCheck, to: qcLink('Final') },
     prog.produced > 0 && { label: 'View costing', icon: Calculator, to: `/production/costing?order=${order.id}` },
     can('Production', 'add') && !cancelled && { label: 'Record wastage', icon: Recycle, to: `/production/wastage?new=1&order=${order.id}` },
     can('Production', 'edit') && open && { label: 'Edit order', icon: Pencil, to: `/production/orders/${order.id}/edit` },
@@ -115,6 +127,45 @@ export default function OrderView() {
           <Progress value={pctDone} tone={cancelled ? 'red' : pctDone >= 100 ? 'green' : 'brass'} style={{ flex: 1, height: 8 }} />
           <span className="small strong nowrap">{pct(Math.min(pctDone, 999), 0)} produced</span>
         </div>
+      </Card>
+
+      <Card
+        title="Process route"
+        subtitle={route.length ? 'Pieces passed on, rejected and waiting at each stage' : undefined}
+        className="mb-16"
+        actions={route.length > 0 && running && can('Production', 'add') && <Button size="sm" variant="soft" icon={Workflow} onClick={() => setStageDrawer({})}>Record stage output</Button>}
+      >
+        {route.length ? (
+          <div className="prd-flow">
+            {route.map((st, i) => (
+              <div key={st.id} className={`prd-flow-stage ${i === curStage && running ? 'current' : ''} ${st.done ? 'done' : ''}`}>
+                <div className="prd-flow-head">
+                  <span className="truncate">{i + 1}. {st.stage}</span>
+                  {st.mode === 'Job Work' && <StatusBadge status="Job Work" />}
+                </div>
+                <div className="small muted truncate">{st.mode === 'Job Work' ? st.process : st.workCentre}</div>
+                <Progress value={st.pct} tone={st.done ? 'green' : 'brass'} />
+                <div className="prd-flow-nums">
+                  <span>In <b>{num(st.input)}</b></span>
+                  <span>OK <b>{num(st.ok)}</b></span>
+                  <span>Rejected <b className={st.rejected ? 'text-red' : ''}>{num(st.rejected)}</b></span>
+                  <span>Waiting <b className={st.waiting ? 'text-amber' : ''}>{num(st.waiting)}</b></span>
+                </div>
+                {running && st.waiting > 0 && can('Production', 'add') && (
+                  <Button size="sm" variant="ghost" onClick={() => setStageDrawer({ stage: st.stage })}>Record</Button>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            compact
+            icon={Route}
+            title="No process route for this product"
+            description="Add a route to track pieces through casting, buffing, plating, assembly and QC."
+            action={can('Production', 'add') && <Button size="sm" variant="primary" to="/production/routings?new=1">Add process route</Button>}
+          />
+        )}
       </Card>
 
       <div className="grid-5 mb-16">
@@ -205,6 +256,53 @@ export default function OrderView() {
         />
       </Card>
 
+      <div className="grid-2 mb-16">
+        <Card
+          title="Job work"
+          subtitle="Plating and finishing sent outside"
+          flush
+          actions={can('Production', 'add') && !cancelled && <Button size="sm" variant="ghost" icon={Send} to={`/production/job-work/new?order=${order.id}`}>Send for job work</Button>}
+        >
+          <MiniTable
+            empty="No job work for this order"
+            onRowClick={(j) => navigate(`/production/job-work/${j.id}`)}
+            columns={[
+              { key: 'number', header: 'Challan', render: (j) => <DocNo to={`/production/job-work/${j.id}`}>{j.number}</DocNo> },
+              { key: 'process', header: 'Process', render: (j) => (<div><div>{j.process}</div><div className="cell-secondary">{suppliers.get(j.supplierId)?.name}</div></div>) },
+              { key: 'sent', header: 'Sent', align: 'right', render: (j) => num(jobWorkBalance(state, j).sent) },
+              { key: 'pending', header: 'Pending', align: 'right', render: (j) => num(jobWorkBalance(state, j).pending) },
+              { key: 'status', header: 'Status', render: (j) => <StatusBadge status={j.status} /> },
+            ]}
+            rows={jobWorks}
+          />
+        </Card>
+        <Card
+          title="Quality inspections"
+          flush
+          actions={
+            can('Quality', 'add') && !cancelled && (
+              <>
+                <Button size="sm" variant="ghost" to={qcLink('In-process')}>In-process check</Button>
+                <Button size="sm" variant="soft" icon={ClipboardCheck} to={qcLink('Final')}>Final inspection</Button>
+              </>
+            )
+          }
+        >
+          <MiniTable
+            empty="No inspections yet"
+            onRowClick={(q) => navigate(`/quality/inspections/${q.id}`)}
+            columns={[
+              { key: 'number', header: 'QC no.', render: (q) => <DocNo to={`/quality/inspections/${q.id}`}>{q.number}</DocNo> },
+              { key: 'type', header: 'Type', render: (q) => (<div><StatusBadge status={q.type} />{q.type === 'In-process' && q.stage && <div className="cell-secondary">{q.stage}</div>}</div>) },
+              { key: 'lotQty', header: 'Lot', align: 'right', render: (q) => num(q.lotQty) },
+              { key: 'rejectedQty', header: 'Rejected', align: 'right', render: (q) => <span className={q.rejectedQty ? 'text-red' : 'muted'}>{num(q.rejectedQty)}</span> },
+              { key: 'result', header: 'Result', render: (q) => <StatusBadge status={q.result} /> },
+            ]}
+            rows={inspections}
+          />
+        </Card>
+      </div>
+
       <div className="grid-2">
         <Card title="Material issues" flush>
           <MiniTable
@@ -232,6 +330,8 @@ export default function OrderView() {
           />
         </Card>
       </div>
+
+      <StageEntryDrawer open={Boolean(stageDrawer)} onClose={() => setStageDrawer(null)} orderId={order.id} stage={stageDrawer?.stage} />
 
       <DocumentPreview
         open={printing}

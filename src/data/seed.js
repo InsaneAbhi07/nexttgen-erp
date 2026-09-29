@@ -12,8 +12,9 @@ import { addDays, today } from '../utils/format.js'
 import { formatDocNumber } from '../store/numbering.js'
 import { rebuildAllMoves, syncStatuses } from '../store/stockEngine.js'
 import { SALES_PERSONS, TRANSPORTERS, PERMISSION_MODULES, PERMISSION_TYPES, stateCode } from './constants.js'
+import { qcChecklist, qcPlanKey, sampleSize, variantName, variantRates } from '../store/mfg.js'
 
-export const DATA_VERSION = 3
+export const DATA_VERSION = 4
 
 function mulberry32(seed) {
   let a = seed
@@ -64,6 +65,7 @@ const WAREHOUSES = [
   ['wh-fgg', 'Finished Goods Godown', 'WH-FGG', 'Plot No. 42, Talanagri Industrial Estate, Aligarh, Uttar Pradesh 202001', 'Suresh Yadav', '+91 97194 22318', 'Active'],
   ['wh-del', 'Delhi Depot', 'WH-DEL', 'B-118, Naraina Industrial Area Phase II, New Delhi 110028', 'Sanjay Arora', '+91 98111 56420', 'Active'],
   ['wh-scr', 'Rejection & Scrap Yard', 'WH-SCR', 'Unit 2 Rear Yard, Talanagri Industrial Area, Aligarh 202001', 'Ramesh Pal', '+91 98370 41256', 'Active'],
+  ['wh-jbw', 'At Job Workers', 'WH-JBW', 'Virtual location – material lying with plating, buffing and heat-treatment job workers', 'Ramesh Pal', '+91 98370 41256', 'Active'],
   ['wh-bhw', 'Bhiwandi Transit Godown', 'WH-BHW', 'Gala No. 7, Rahnal Village, Bhiwandi, Maharashtra 421302', 'Imran Shaikh', '+91 90040 71833', 'Inactive'],
 ]
 
@@ -71,11 +73,11 @@ const WAREHOUSES = [
 const ITEMS = [
   ['fg-1001', 'FG-1001', 'Premium Door Lock', 'Door Locks', 'Mortise Locks', 'NexttGen', 'PCS', '83014090', 18, 420, 845, 150, 'Finished Good', 'wh-fgg', 640],
   ['fg-1002', 'FG-1002', 'Mortise Lock 250mm Stainless Steel', 'Door Locks', 'Mortise Locks', 'NexttGen', 'PCS', '83014090', 18, 610, 1150, 100, 'Finished Good', 'wh-fgg', 310],
-  ['fg-1003', 'FG-1003', 'Brass Padlock 50mm', 'Padlocks', 'Brass Padlocks', 'Aligarh Classic', 'PCS', '83011000', 18, 185, 340, 200, 'Finished Good', 'wh-fgg', 820],
+  ['fg-1003', 'FG-1003', 'Brass Padlock 50mm Polished Brass', 'Padlocks', 'Brass Padlocks', 'Aligarh Classic', 'PCS', '83011000', 18, 185, 340, 200, 'Finished Good', 'wh-fgg', 820],
   ['fg-1004', 'FG-1004', 'Laminated Steel Padlock 65mm', 'Padlocks', 'Steel Padlocks', 'Royal Guard', 'PCS', '83011000', 18, 210, 395, 150, 'Finished Good', 'wh-fgg', 95],
   ['fg-1005', 'FG-1005', 'Cylinder Lock 70mm Satin Nickel', 'Door Locks', 'Cylinder Locks', 'SecureMax', 'PCS', '83014090', 18, 340, 640, 120, 'Finished Good', 'wh-fgg', 410],
   ['fg-1006', 'FG-1006', 'Cabinet Lock 20mm', 'Accessories', 'Furniture Locks', 'NexttGen', 'PCS', '83014090', 18, 48, 95, 300, 'Finished Good', 'wh-fgg', 140],
-  ['fg-1007', 'FG-1007', 'Stainless Steel Handle 8"', 'Handles', 'Pull Handles', 'SteelCraft', 'PCS', '83024110', 18, 96, 185, 250, 'Finished Good', 'wh-fgg', 1260],
+  ['fg-1007', 'FG-1007', 'Pull Handle 8" Stainless Steel', 'Handles', 'Pull Handles', 'SteelCraft', 'PCS', '83024110', 18, 96, 185, 250, 'Finished Good', 'wh-fgg', 1260],
   ['fg-1008', 'FG-1008', 'Door Handle Set with Mortise Plate', 'Handles', 'Mortise Handles', 'NexttGen', 'SET', '83024110', 18, 520, 980, 80, 'Finished Good', 'wh-fgg', 215],
   ['fg-1009', 'FG-1009', 'Aldrop 10" Antique Brass', 'Tower Bolts', 'Aldrops', 'Aligarh Classic', 'PCS', '83024190', 18, 145, 275, 150, 'Finished Good', 'wh-fgg', 480],
   ['fg-1010', 'FG-1010', 'Tower Bolt 6" Stainless Steel', 'Tower Bolts', 'Tower Bolts', 'SteelCraft', 'PCS', '83024190', 18, 58, 112, 400, 'Finished Good', 'wh-fgg', 1840],
@@ -104,7 +106,85 @@ const ITEMS = [
   ['pk-4001', 'PK-4001', 'Printed Carton Box – Small', 'Packaging', 'Cartons', 'NexttGen', 'PCS', '48191010', 12, 11, 0, 2000, 'Packaging Material', 'wh-rms', 6200],
   ['pk-4002', 'PK-4002', 'Blister Pack with Printed Card', 'Packaging', 'Blister Packs', 'NexttGen', 'PCS', '39235090', 18, 6, 0, 3000, 'Packaging Material', 'wh-rms', 4100],
   ['pk-4003', 'PK-4003', 'Master Carton 5-Ply', 'Packaging', 'Cartons', 'NexttGen', 'PCS', '48191010', 12, 38, 0, 300, 'Packaging Material', 'wh-rms', 720],
+  ['sf-5001', 'SF-5001', 'Lock Body – Buffed, for Plating', 'Raw Materials', 'Semi Finished', 'Generic', 'PCS', '83019000', 18, 160, 0, 200, 'Semi Finished', 'wh-rms', 420],
+  ['sf-5002', 'SF-5002', 'Handle Casting – Buffed, for Antique Finish', 'Raw Materials', 'Semi Finished', 'Generic', 'PCS', '83029000', 18, 72, 0, 150, 'Semi Finished', 'wh-rms', 180],
 ]
+
+/* Product families — one design in many finishes and sizes. Each variant is a real item. */
+const FAMILIES = [
+  {
+    id: 'fam-1', code: 'FAM-PH', name: 'Pull Handle', category: 'Handles', subCategory: 'Pull Handles', brand: 'SteelCraft', unit: 'PCS', hsn: '83024110', gst: 18,
+    baseSalesRate: 185, basePurchaseRate: 96, description: 'D-type pull handle, 19 mm tube. Base rate: 8" stainless steel.',
+    attributes: [
+      { name: 'Size', values: ['6"', '8"', '10"', '12"'], adjust: { '6"': -20, '10"': 25, '12"': 50 } },
+      { name: 'Finish', values: ['Stainless Steel', 'Antique Brass', 'Satin Nickel', 'Black Matt'], adjust: { 'Antique Brass': 15, 'Satin Nickel': 10, 'Black Matt': 20 } },
+    ],
+  },
+  {
+    id: 'fam-2', code: 'FAM-BP', name: 'Brass Padlock', category: 'Padlocks', subCategory: 'Brass Padlocks', brand: 'Aligarh Classic', unit: 'PCS', hsn: '83011000', gst: 18,
+    baseSalesRate: 340, basePurchaseRate: 185, description: 'Solid brass body, hardened shackle, 3 keys. Base rate: 50 mm polished brass.',
+    attributes: [
+      { name: 'Size', values: ['40mm', '50mm', '65mm'], adjust: { '40mm': -20, '65mm': 35 } },
+      { name: 'Finish', values: ['Polished Brass', 'Antique'], adjust: { Antique: 10 } },
+    ],
+  },
+  {
+    id: 'fam-3', code: 'FAM-CL', name: 'Cylinder Lock', category: 'Door Locks', subCategory: 'Cylinder Locks', brand: 'SecureMax', unit: 'PCS', hsn: '83014090', gst: 18,
+    baseSalesRate: 640, basePurchaseRate: 340, description: 'Euro-profile cylinder, 5 keys. Base rate: 70 mm satin nickel.',
+    attributes: [
+      { name: 'Size', values: ['60mm', '70mm', '90mm'], adjust: { '60mm': -12, '90mm': 22 } },
+      { name: 'Finish', values: ['Satin Nickel', 'Antique Brass', 'Chrome'], adjust: { 'Antique Brass': 8, Chrome: 5 } },
+    ],
+  },
+]
+// Existing items that belong to a family
+const FAMILY_OF = {
+  'fg-1007': ['fam-1', { Size: '8"', Finish: 'Stainless Steel' }],
+  'fg-1003': ['fam-2', { Size: '50mm', Finish: 'Polished Brass' }],
+  'fg-1005': ['fam-3', { Size: '70mm', Finish: 'Satin Nickel' }],
+}
+// New variant items: [id, familyId, attributes, minStock, targetBalance]
+const VARIANTS = [
+  ['fg-1016', 'fam-1', { Size: '6"', Finish: 'Stainless Steel' }, 200, 640],
+  ['fg-1017', 'fam-1', { Size: '10"', Finish: 'Stainless Steel' }, 150, 420],
+  ['fg-1018', 'fam-1', { Size: '8"', Finish: 'Antique Brass' }, 120, 380],
+  ['fg-1019', 'fam-1', { Size: '10"', Finish: 'Antique Brass' }, 80, 160],
+  ['fg-1020', 'fam-1', { Size: '8"', Finish: 'Satin Nickel' }, 100, 290],
+  ['fg-1021', 'fam-1', { Size: '8"', Finish: 'Black Matt' }, 60, 0],
+  ['fg-1022', 'fam-2', { Size: '40mm', Finish: 'Polished Brass' }, 200, 540],
+  ['fg-1023', 'fam-2', { Size: '65mm', Finish: 'Polished Brass' }, 100, 210],
+  ['fg-1024', 'fam-2', { Size: '50mm', Finish: 'Antique' }, 80, 150],
+  ['fg-1025', 'fam-3', { Size: '60mm', Finish: 'Satin Nickel' }, 100, 260],
+  ['fg-1026', 'fam-3', { Size: '90mm', Finish: 'Satin Nickel' }, 60, 120],
+  ['fg-1027', 'fam-3', { Size: '70mm', Finish: 'Antique Brass' }, 50, 95],
+]
+VARIANTS.forEach(([id, famId, attrs, minStock, target]) => {
+  const f = FAMILIES.find((x) => x.id === famId)
+  const { salesRate, purchaseRate } = variantRates(f, attrs)
+  FAMILY_OF[id] = [famId, attrs]
+  ITEMS.push([id, id.toUpperCase(), variantName(f, attrs), f.category, f.subCategory, f.brand, f.unit, f.hsn, f.gst, purchaseRate, salesRate, minStock, 'Finished Good', 'wh-fgg', target])
+})
+
+/* Process routes: [stage, workCentre, mode, jobWorkProcess, outputPerHour, ratePerPc] */
+const ROUTES = {
+  'fg-1001': [['Die Casting', 'Die-casting M/C 2 (120T)', 'In-house', '', 180, 4.5], ['Machining', 'Drilling & Tapping Line', 'In-house', '', 120, 3], ['Buffing & Polishing', 'Buffing Line A', 'In-house', '', 90, 3.5], ['Plating', '', 'Job Work', 'Nickel Plating', 0, 6], ['Assembly', 'Lock Assembly Line', 'In-house', '', 60, 9], ['Final QC', 'QC Bench', 'In-house', '', 150, 1.5], ['Packing', 'Packing Section', 'In-house', '', 240, 1]],
+  'fg-1003': [['Machining', 'CNC Lathe Bay', 'In-house', '', 80, 4], ['Buffing & Polishing', 'Buffing Line B', 'In-house', '', 110, 2.5], ['Assembly', 'Lock Assembly Line', 'In-house', '', 90, 5], ['Final QC', 'QC Bench', 'In-house', '', 180, 1], ['Packing', 'Packing Section', 'In-house', '', 300, 0.8]],
+  'fg-1005': [['Machining', 'CNC Lathe Bay', 'In-house', '', 70, 4.5], ['Plating', 'Plating Shop (in-house)', 'In-house', '', 200, 2.5], ['Assembly', 'Lock Assembly Line', 'In-house', '', 80, 6], ['Final QC', 'QC Bench', 'In-house', '', 160, 1.2], ['Packing', 'Packing Section', 'In-house', '', 300, 0.8]],
+  'fg-1007': [['Machining', 'Power Press 40T', 'In-house', '', 300, 1.5], ['Buffing & Polishing', 'Buffing Line B', 'In-house', '', 140, 2.5], ['Assembly', 'Handle Assembly Table', 'In-house', '', 200, 1.5], ['Final QC', 'QC Bench', 'In-house', '', 300, 0.5], ['Packing', 'Packing Section', 'In-house', '', 400, 0.5]],
+  'fg-1008': [['Die Casting', 'Die-casting M/C 1 (80T)', 'In-house', '', 150, 5], ['Buffing & Polishing', 'Buffing Line A', 'In-house', '', 80, 4], ['Plating', '', 'Job Work', 'Antique Finish', 0, 9], ['Assembly', 'Handle Assembly Table', 'In-house', '', 50, 12], ['Final QC', 'QC Bench', 'In-house', '', 120, 2], ['Packing', 'Packing Section', 'In-house', '', 200, 1.5]],
+  'fg-1010': [['Machining', 'Power Press 40T', 'In-house', '', 400, 1], ['Buffing & Polishing', 'Buffing Line B', 'In-house', '', 250, 1.5], ['Final QC', 'QC Bench', 'In-house', '', 500, 0.3], ['Packing', 'Packing Section', 'In-house', '', 600, 0.4]],
+}
+const OPERATORS = ['Rafiq Ahmed', 'Sunil Kumar', 'Mukesh Yadav', 'Salim Ansari', 'Ravi Shankar', 'Imran Qureshi']
+
+// Job workers — added after the purchase history so they never get raw-material POs.
+// [name, legalName, contactPerson, address, city, state, paymentTerms, processes]
+const JOB_WORKERS = [
+  ['Aligarh Electroplaters', 'Aligarh Electroplaters & Finishers', 'Shahid Ali', 'Jamalpur Industrial Area, GT Road', 'Aligarh', 'Uttar Pradesh', '30 Days', ['Nickel Plating', 'Chrome Plating', 'Antique Finish']],
+  ['Krishna Buffing Works', 'Krishna Buffing Works', 'Kishan Lal', 'Kishanpur Road, Near Sasni Gate', 'Aligarh', 'Uttar Pradesh', '15 Days', ['Buffing & Polishing']],
+  ['Precision Heat Treaters', 'Precision Heat Treaters Pvt. Ltd.', 'Vinod Saxena', 'Site IV, Sahibabad Industrial Area', 'Ghaziabad', 'Uttar Pradesh', '30 Days', ['Heat Treatment']],
+  ['Royal Powder Coaters', 'Royal Powder Coaters', 'Aftab Hussain', 'Talanagri Road, Ramghat', 'Aligarh', 'Uttar Pradesh', '15 Days', ['Powder Coating']],
+]
+
 
 // [name, legalName, contactPerson, address, city, state, paymentTerms, creditLimit, openingBalance, status, weight]
 const CUSTOMERS = [
@@ -147,7 +227,7 @@ const PINCODES = {
   Delhi: '110006', Mumbai: '400002', Lucknow: '226018', Jaipur: '302001', Ahmedabad: '380001', Chandigarh: '160017',
   Secunderabad: '500003', Pune: '411002', Kanpur: '208001', Bengaluru: '560002', Indore: '452007', Surat: '395002',
   Ludhiana: '141003', Agra: '282002', Dehradun: '248001', Jodhpur: '342001', Nagpur: '440002', Vadodara: '390001',
-  Aligarh: '202001', Udaipur: '313003', Faridabad: '121005', Noida: '201301', Jamnagar: '361004',
+  Aligarh: '202001', Udaipur: '313003', Ghaziabad: '201010', Faridabad: '121005', Noida: '201301', Jamnagar: '361004',
 }
 
 // BOM definitions: [id, code, productId, version, status, components [itemId, qty]]
@@ -184,11 +264,11 @@ const ROLE_PERMS = {
   Admin: { '*': 'vaedprx' },
   Manager: { '*': 'vaeprx', 'Users & Access': 'v', Settings: 'v' },
   Accountant: { Dashboard: 'v', Accounts: 'vaedprx', Sales: 'vrx', Purchase: 'vrx', Reports: 'vrx', Masters: 'vae', Inventory: 'v' },
-  'Purchase User': { Dashboard: 'v', Purchase: 'vaerx', Inventory: 'v', Masters: 'va', Reports: 'vr' },
+  'Purchase User': { Dashboard: 'v', Purchase: 'vaerx', Inventory: 'v', Quality: 'v', Masters: 'va', Reports: 'vr' },
   'Sales User': { Dashboard: 'v', Sales: 'vaerx', Inventory: 'v', Masters: 'va', Reports: 'vr', Accounts: 'v' },
-  'Store User': { Dashboard: 'v', Inventory: 'vaer', Purchase: 'va', Production: 'v', Masters: 'v', Reports: 'v' },
-  'Production User': { Dashboard: 'v', Production: 'vaer', Inventory: 'v', Masters: 'v', Reports: 'v' },
-  Employee: { Dashboard: 'v', Reports: 'v' },
+  'Store User': { Dashboard: 'v', Inventory: 'vaer', Purchase: 'va', Production: 'v', Quality: 'va', Masters: 'v', Reports: 'v' },
+  'Production User': { Dashboard: 'v', Production: 'vaer', Quality: 'vaer', Inventory: 'v', Masters: 'v', Reports: 'v' },
+  Employee: { Dashboard: 'v', Quality: 'v', Reports: 'v' },
 }
 const ROLE_DESC = {
   'Super Admin': 'Full access to every module, including users and company settings',
@@ -198,7 +278,7 @@ const ROLE_DESC = {
   'Purchase User': 'Creates requisitions, purchase orders and supplier invoices',
   'Sales User': 'Creates quotations, sales orders and invoices',
   'Store User': 'Handles GRN, stock movements, transfers and adjustments',
-  'Production User': 'Production orders, material issue and production entries',
+  'Production User': 'Production orders, stage output, job work, QC and production entries',
   Employee: 'Read-only access to dashboard and reports',
 }
 
@@ -267,7 +347,9 @@ export function buildSeedData() {
   const items = ITEMS.map(([id, code, name, category, subCategory, brand, unit, hsn, gst, purchaseRate, salesRate, minStock, type, warehouseId]) => ({
     id, code, name, category, subCategory, brand, unit, hsn, gst, purchaseRate, salesRate, minStock,
     openingStock: 0, openingDate: OPENING_DATE, warehouseId, type, status: 'Active', description: '', createdAt: at(created),
+    ...(FAMILY_OF[id] ? { familyId: FAMILY_OF[id][0], attributes: FAMILY_OF[id][1] } : {}),
   }))
+  const productFamilies = FAMILIES.map((f) => ({ ...f, attributes: f.attributes.map((a) => ({ ...a, values: [...a.values], adjust: { ...a.adjust } })), status: 'Active', createdAt: at(created) }))
   items.push({
     id: 'fg-1015', code: 'FG-1015', name: 'Door Chain Guard Antique', category: 'Accessories', subCategory: 'Door Guards', brand: 'Aligarh Classic',
     unit: 'PCS', hsn: '83024190', gst: 18, purchaseRate: 88, salesRate: 165, minStock: 0, openingStock: 0, openingDate: OPENING_DATE,
@@ -845,6 +927,180 @@ export function buildSeedData() {
     })
   })
 
+  /* ---------------- Job workers ---------------- */
+  JOB_WORKERS.forEach(([name, legal, contact, address, city, st, terms, processes]) => {
+    const n = suppliers.length + 1
+    const sup = {
+      id: `sup-${pad(n)}`, code: `SUP-${String(n).padStart(4, '0')}`, name, companyName: legal, contactPerson: contact,
+      mobile: mobile(), email: emailFor(name), gstin: gstinFor(st, name, legal.includes('Pvt') ? 'C' : 'F'),
+      address, city, state: st, pincode: PINCODES[city] || '', paymentTerms: terms, openingBalance: 0, status: 'Active',
+      itemIds: [], jobWorker: true, processes, createdAt: at(ago(ri(250, 400))),
+    }
+    suppliers.push(sup)
+    supById[sup.id] = sup
+  })
+  const jobWorker = (name) => suppliers.find((x) => x.name === name)
+
+  /* ---------------- Process routes ---------------- */
+  const routings = Object.entries(ROUTES).map(([productId, ops], i) => ({
+    id: `rt-${i + 1}`, code: `RT-${itemById[productId].code.replace(/-/g, '')}`, productId, bomId: bomByProduct[productId]?.id || null, status: 'Active',
+    operations: ops.map(([stage, workCentre, mode, process, outputPerHour, ratePerPc], j) => ({
+      id: `op-${i + 1}-${j + 1}`, stage, workCentre, mode, process, outputPerHour, ratePerPc, qcRequired: stage === 'Final QC',
+    })),
+    remarks: 'Approved by production head', createdAt: at(ago(ri(100, 200))),
+  }))
+  const routingByProduct = Object.fromEntries(routings.map((r) => [r.productId, r]))
+
+  /* ---------------- Stage-wise output (WIP) ---------------- */
+  const stageEntries = []
+  const splitInt = (total, parts) => {
+    const w = Array.from({ length: parts }, () => rand() + 0.2)
+    const sw = w.reduce((a, x) => a + x, 0)
+    const out = w.map((x) => Math.floor((total * x) / sw))
+    out[out.length - 1] += total - out.reduce((a, x) => a + x, 0)
+    return out
+  }
+  productionOrders
+    .filter((o) => !o.historical && ['Completed', 'In Progress', 'Released'].includes(o.status) && routingByProduct[o.productId])
+    .forEach((o) => {
+      const ops = routingByProduct[o.productId].operations
+      const n = ops.length
+      const entries = productionEntries.filter((e) => e.productionOrderId === o.id)
+      const produced = entries.reduce((a, e) => a + e.producedQty, 0)
+      const good = produced - entries.reduce((a, e) => a + e.rejectedQty, 0)
+      // Rejects happen at casting, machining, buffing, plating and final QC
+      const rejectStages = ops.map((op, i) => (['Die Casting', 'Machining', 'Buffing & Polishing', 'Plating', 'Final QC'].includes(op.stage) ? i : -1)).filter((i) => i >= 0)
+      const rejects = Array(n).fill(0)
+      for (let k = 0; k < produced - good; k++) rejects[pick(rejectStages)]++
+      // WIP still sitting at each stage (the unproduced balance spread along the line)
+      const remaining = Math.max(0, o.plannedQty - produced)
+      const wipW = o.status === 'Released' ? ops.map((_, i) => (i === 0 ? 0.75 : i === 1 ? 0.25 : 0)) : ops.map((_, i) => (i === 0 ? 0.08 : 0.2 + rand() * 0.4))
+      const wsum = wipW.reduce((a, x) => a + x, 0) || 1
+      const waiting = wipW.map((w) => Math.floor((remaining * w) / wsum))
+      waiting[0] += remaining - waiting.reduce((a, x) => a + x, 0)
+      // Walk backwards: ok(last) = good, input(i) = ok + rejected + waiting, ok(i-1) = input(i)
+      const ok = Array(n).fill(0)
+      ok[n - 1] = good
+      for (let i = n - 1; i > 0; i--) ok[i - 1] = ok[i] + rejects[i] + waiting[i]
+      const span = Math.max(1, Math.min(o.status === 'Completed' ? 4 : 6, Math.round((Date.parse(TODAY) - Date.parse(o.date)) / 86400000)))
+      ops.forEach((op, i) => {
+        if (ok[i] + rejects[i] <= 0) return
+        const parts = ok[i] > 400 ? 2 : 1
+        const oks = splitInt(ok[i], parts)
+        const rjs = splitInt(rejects[i], parts)
+        for (let k = 0; k < parts; k++) {
+          const dayOffset = Math.min(Math.round(((i + k * 0.6 + 0.5) / (n + 0.5)) * span), span)
+          const date = clampToday(addDays(o.date, dayOffset))
+          const jw = op.mode === 'Job Work'
+          stageEntries.push({
+            id: `se-${stageEntries.length + 1}`, number: '', date, productionOrderId: o.id, productId: o.productId, stage: op.stage, operationId: op.id,
+            workCentre: jw ? '' : op.workCentre, mode: op.mode, okQty: oks[k], rejectedQty: rjs[k],
+            reworkQty: op.stage === 'Buffing & Polishing' && chance(0.4) ? ri(4, 15) : 0,
+            operator: jw ? '' : pick(OPERATORS), shift: pick(['Day', 'Day', 'Night']),
+            remarks: jw ? `Received back after ${op.process.toLowerCase()}` : rjs[k] ? 'Rejected pieces sent to scrap yard' : '',
+            createdAt: at(date, ri(12, 19)),
+          })
+        }
+      })
+    })
+
+  /* ---------------- Job work challans & receipts ---------------- */
+  const jobWorkOrders = []
+  const jobWorkReceipts = []
+  const orderFor = (pid, status) => productionOrders.filter((o) => !o.historical && o.productId === pid && o.status === status).sort((a, b) => (a.date < b.date ? 1 : -1))[0]
+  ;[
+    // [age, job worker, process, linked order, lines [[itemId, qty, rate]], receipts [[age, [[ok, rej] per line]]], lead days]
+    [22, 'Aligarh Electroplaters', 'Nickel Plating', orderFor('fg-1001', 'Completed'), [['sf-5001', 500, 6]], [[18, [[494, 6]]]], 5],
+    [16, 'Krishna Buffing Works', 'Buffing & Polishing', null, [['rm-3012', 400, 3.5]], [[13, [[400, 0]]]], 4],
+    [12, 'Precision Heat Treaters', 'Heat Treatment', null, [['rm-3002', 1000, 2.2]], [[8, [[985, 15]]]], 5],
+    [10, 'Aligarh Electroplaters', 'Chrome Plating', null, [['rm-3012', 300, 5.5]], [], 6],
+    [6, 'Aligarh Electroplaters', 'Nickel Plating', orderFor('fg-1001', 'In Progress'), [['sf-5001', 600, 6]], [[2, [[350, 4]]]], 5],
+    [4, 'Aligarh Electroplaters', 'Antique Finish', null, [['sf-5002', 250, 9], ['rm-3012', 150, 9]], [], 6],
+  ].forEach(([age, workerName, process, order, lines, rcpts, lead]) => {
+    const worker = jobWorker(workerName)
+    const date = workday(ago(age))
+    const jwo = {
+      id: `jwo-${jobWorkOrders.length + 1}`, number: '', date, supplierId: worker.id, process, productionOrderId: order?.id || null,
+      fromWarehouseId: 'wh-rms', returnWarehouseId: 'wh-rms', expectedDate: addDays(date, lead),
+      lines: lines.map(([itemId, qty, rate]) => ({ id: lid(), itemId, qty, rate })),
+      vehicleNo: `UP81 ${pick(['AT', 'CT', 'BK'])} ${ri(1000, 9999)}`, remarks: order ? 'Against production order' : pick(['Stock replenishment', 'For festive season orders']),
+      status: 'Sent', createdAt: at(date),
+    }
+    jobWorkOrders.push(jwo)
+    rcpts.forEach(([rAge, qtys]) => {
+      const rDate = clampToday(workday(ago(rAge)))
+      jobWorkReceipts.push({
+        id: `jwr-${jobWorkReceipts.length + 1}`, number: '', date: rDate, jobWorkOrderId: jwo.id, supplierId: worker.id, returnWarehouseId: 'wh-rms',
+        challanNo: `${worker.name.split(' ').map((w) => w[0]).join('')}/JW/${ri(100, 999)}`,
+        lines: lines.map(([itemId, , rate], i) => ({ id: lid(), itemId, receivedQty: qtys[i][0], rejectedQty: qtys[i][1], rate })),
+        remarks: qtys.some((q) => q[1]) ? 'Rejected pieces kept aside – debit for re-plating' : 'Received in good condition',
+        createdAt: at(rDate),
+      })
+    })
+  })
+
+  /* ---------------- QC inspections ---------------- */
+  const qcInspections = []
+  const OBS = {
+    'Key operation (10 cycles)': 'Smooth on all samples', 'Latch / bolt throw': '16–17 mm', 'Keys per lock & key differs': '3 keys, all unique', 'Plating thickness': '9.2 µm avg',
+    'Salt spray test (sample)': 'No red rust at 48 h', 'Finish & appearance': 'OK', 'Length & hole centres': 'Within ±0.3 mm', 'Plating adhesion (tape test)': 'No peel-off',
+    'Finish & shade': 'Matches master sample', 'Screw hole threads': 'Go / No-go OK', 'Load test (sample)': 'No deformation', 'Test certificate': 'Received, grade OK',
+    Dimensions: 'Within tolerance', 'Hardness / grade': 'As per spec', 'Surface defects': 'None observed', 'Print & colour': 'OK', 'Carton strength': '13.5 kg/cm²',
+    'Plating / finish thickness': '8.6 µm avg', 'Adhesion (bend / tape test)': 'OK', 'Colour / shade': 'Matches sample', 'First-piece approval': 'Approved',
+    'Critical dimensions': 'Within tolerance', 'Surface finish': 'OK',
+  }
+  const FAIL = {
+    'Raw Material': ['Surface defects', 'Blow holes / cracks on rejected pieces'],
+    Packaging: ['Print & colour', 'Shade variation on rejected pieces'],
+    Lock: ['Key operation (10 cycles)', 'Tight on few pieces – lever misalignment'],
+    Handle: ['Plating adhesion (tape test)', 'Peel-off on few pieces'],
+    'Job Work': ['Surface defects', 'Burn marks / patches on rejected pieces'],
+    'In-process': ['Surface finish', 'Flash on few castings – sent for fettling'],
+  }
+  const addQc = ({ date, type, planKey, refCollection, refId, itemId, supplierId = null, productionOrderId = null, stage = '', lotQty, rejectedQty = 0, reworkQty = 0, inspector }) => {
+    const checks = qcChecklist(planKey).map((c) => ({ ...c, observed: OBS[c.parameter] || 'OK' }))
+    if (rejectedQty > 0 || reworkQty > 0) {
+      const [param, text] = FAIL[planKey] || []
+      const c = checks.find((x) => x.parameter === param)
+      if (c) Object.assign(c, { observed: text, result: 'Fail' })
+    }
+    const acceptedQty = lotQty - rejectedQty - reworkQty
+    const result = rejectedQty / (lotQty || 1) > 0.05 ? 'Rejected' : reworkQty > 0 ? 'Rework' : rejectedQty > 0 ? 'Accepted with Deviation' : 'Accepted'
+    qcInspections.push({
+      id: `qc-${qcInspections.length + 1}`, number: '', date, type, planKey, refCollection, refId, itemId, supplierId, productionOrderId, stage,
+      lotQty, sampleQty: sampleSize(lotQty), checks, acceptedQty, rejectedQty, reworkQty, result, inspector,
+      remarks: result === 'Accepted' ? 'Lot released' : result === 'Rejected' ? 'Lot on hold – return to supplier' : result === 'Rework' ? 'Defective pieces sent back for rework' : 'Released after segregating defective pieces',
+      createdAt: at(date, ri(11, 18)),
+    })
+  }
+  // Incoming – GRNs from the last month, except the last three days (left pending for the demo)
+  grns.filter((g) => !g.historical && g.date >= ago(30) && g.date < ago(3)).forEach((g) =>
+    g.lines.filter((l) => l.receivedQty > 0).forEach((l) =>
+      addQc({ date: g.date, type: 'Incoming', planKey: qcPlanKey(itemById[l.itemId], 'Incoming'), refCollection: 'grns', refId: g.id, itemId: l.itemId, supplierId: g.supplierId, lotQty: l.receivedQty, rejectedQty: l.rejectedQty, inspector: g.qcBy }),
+    ),
+  )
+  // Job work returns – all but the latest receipt
+  jobWorkReceipts.filter((r) => r.date < ago(2)).forEach((r) =>
+    r.lines.forEach((l) =>
+      addQc({ date: r.date, type: 'Job Work', planKey: 'Job Work', refCollection: 'jobWorkReceipts', refId: r.id, itemId: l.itemId, supplierId: r.supplierId, lotQty: l.receivedQty + l.rejectedQty, rejectedQty: l.rejectedQty, inspector: 'Deepak Chauhan' }),
+    ),
+  )
+  // Final – recent completed orders except the latest one
+  const completedRecent = productionOrders.filter((o) => !o.historical && o.status === 'Completed').sort((a, b) => (a.date < b.date ? -1 : 1))
+  completedRecent.slice(0, -1).forEach((o) => {
+    const es = productionEntries.filter((e) => e.productionOrderId === o.id)
+    const produced = es.reduce((a, e) => a + e.producedQty, 0)
+    const rejected = es.reduce((a, e) => a + e.rejectedQty, 0)
+    const date = es.reduce((a, e) => (e.date > a ? e.date : a), o.date)
+    addQc({ date, type: 'Final', planKey: qcPlanKey(itemById[o.productId], 'Final'), refCollection: 'productionOrders', refId: o.id, itemId: o.productId, productionOrderId: o.id, stage: 'Final QC', lotQty: produced, rejectedQty: Math.min(rejected, Math.round(produced * 0.02)), inspector: 'Deepak Chauhan' })
+  })
+  // In-process patrol checks on running orders
+  productionOrders.filter((o) => !o.historical && o.status === 'In Progress').forEach((o, i) => {
+    const op = routingByProduct[o.productId]?.operations[0]
+    if (!op) return
+    addQc({ date: clampToday(addDays(o.date, 1)), type: 'In-process', planKey: 'In-process', refCollection: 'productionOrders', refId: o.id, itemId: o.productId, productionOrderId: o.id, stage: op.stage, lotQty: 50, reworkQty: i === 1 ? 4 : 0, inspector: pick(['Deepak Chauhan', 'Mohd. Irfan']) })
+  })
+
   /* ---------------- Inventory documents ---------------- */
   const stockTransfers = [
     [34, 'wh-fgg', 'wh-del', [['fg-1001', 120], ['fg-1003', 200], ['fg-1010', 400]], 'Received'],
@@ -1004,17 +1260,22 @@ export function buildSeedData() {
   numberAll(materialIssues, 'MI')
   numberAll(productionEntries, 'PE')
   numberAll(wastages, 'WST')
+  numberAll(stageEntries, 'SE')
+  numberAll(jobWorkOrders, 'JWO')
+  numberAll(jobWorkReceipts, 'JWR')
+  numberAll(qcInspections, 'QC')
   numberAll(receipts, 'RCT')
   numberAll(payments, 'PAY')
 
   let state = {
     version: DATA_VERSION,
     seededAt: new Date().toISOString(),
-    categories, brands, units, warehouses, items, customers, suppliers,
+    categories, brands, units, warehouses, items, customers, suppliers, productFamilies,
     purchaseRequisitions, purchaseOrders, grns, purchaseInvoices, purchaseReturns,
     quotations, salesOrders, deliveryChallans, salesInvoices, salesReturns,
     stockIns, stockOuts, stockTransfers, stockAdjustments,
     boms, productionOrders, materialIssues, productionEntries, wastages,
+    routings, stageEntries, jobWorkOrders, jobWorkReceipts, qcInspections,
     receipts, payments, users, roles, loginActivity, settings,
     notifications: [], activities: [], stockMoves: [],
   }
@@ -1081,6 +1342,10 @@ export function buildSeedData() {
   if (pendingSO) pushN('sales', 'Sales order pending dispatch', `${pendingSO.number} for ${custById[pendingSO.customerId].name} is due on ${pendingSO.deliveryDate}.`, 3.2, `/sales/orders/${pendingSO.id}`)
   if (overdue) pushN('payment', 'Payment overdue', `${custById[overdue.customerId].name} has not paid ${overdue.number} (${fmtInr(overdue.totals.grandTotal)}).`, 5, '/accounts/outstanding')
   if (plannedPrd) pushN('production', 'Production pending', `${plannedPrd.number} for ${plannedPrd.plannedQty} × ${itemById[plannedPrd.productId].name} is waiting for material issue.`, 6.5, `/production/orders/${plannedPrd.id}`, true)
+  const overdueJw = state.jobWorkOrders.filter((j) => j.status === 'Sent' && j.expectedDate < TODAY)[0]
+  if (overdueJw) pushN('production', 'Job work overdue', `${overdueJw.number} (${overdueJw.process.toLowerCase()}) with ${supById[overdueJw.supplierId].name} was due on ${overdueJw.expectedDate}.`, 1.1, `/production/job-work/${overdueJw.id}`)
+  const pendingGrnQc = state.grns.filter((g) => !g.historical && g.date >= ago(3)).length
+  if (pendingGrnQc) pushN('purchase', 'Incoming QC pending', `${pendingGrnQc} goods receipt(s) from the last 3 days are waiting for inspection.`, 2, '/quality')
   pushN('customer', 'New customer added', `${newCustomer.name}, ${newCustomer.city} was added by Neha Gupta.`, 26, `/masters/customers?view=${newCustomer.id}`, true)
   pushN('system', 'Daily backup completed', 'Demo data snapshot saved in this browser.', 30, '/settings/company', true)
 
@@ -1095,6 +1360,8 @@ export function buildSeedData() {
   recent(state.purchaseOrders, 2).forEach((d, i) => pushA('Amit Verma', 'created', 'Purchase Order', d.number, 'Purchase', 3.4 + i * 11, `/purchase/orders/${d.id}`))
   recent(state.salesOrders, 2).forEach((d, i) => pushA('Karan Singh', 'confirmed', 'Sales Order', d.number, 'Sales', 4.1 + i * 10, `/sales/orders/${d.id}`))
   recent(state.stockTransfers, 1).forEach((d) => pushA('Suresh Yadav', 'dispatched', 'Stock Transfer', d.number, 'Inventory', 20, `/inventory/transfers/${d.id}`))
+  recent(state.qcInspections, 2).forEach((d, i) => pushA(d.inspector, 'inspected', 'QC Inspection', d.number, 'Quality', 2.2 + i * 7, `/quality/inspections/${d.id}`))
+  recent(state.jobWorkOrders, 1).forEach((d) => pushA('Ramesh Pal', 'sent', 'Job Work Challan', d.number, 'Production', 6.5, `/production/job-work/${d.id}`))
   recent(state.productionOrders, 1, (p) => p.status === 'Planned').forEach((d) => pushA('Rajesh Kumar', 'planned', 'Production Order', d.number, 'Production', 5.5, `/production/orders/${d.id}`))
   pushA('Anjali Sharma', 'updated', 'Item', 'FG-1004 Laminated Steel Padlock 65mm', 'Masters', 28, '/masters/items?view=fg-1004')
   activities.sort((a, b) => (a.at < b.at ? 1 : -1))

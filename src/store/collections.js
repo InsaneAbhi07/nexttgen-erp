@@ -15,6 +15,7 @@ export const COLLECTIONS = {
   warehouses: { label: 'Warehouse', module: 'Masters', idPrefix: 'wh', route: (r) => `/masters/warehouses?view=${r.id}` },
   customers: { label: 'Customer', module: 'Masters', idPrefix: 'cus', route: (r) => `/masters/customers?view=${r.id}` },
   suppliers: { label: 'Supplier', module: 'Masters', idPrefix: 'sup', route: (r) => `/masters/suppliers?view=${r.id}` },
+  productFamilies: { label: 'Product Family', module: 'Masters', idPrefix: 'fam', route: (r) => `/masters/variants/${r.id}` },
 
   // Purchase
   purchaseRequisitions: { label: 'Purchase Requisition', module: 'Purchase', prefix: 'PR', idPrefix: 'pr', route: (r) => `/purchase/requisitions/${r.id}` },
@@ -42,6 +43,13 @@ export const COLLECTIONS = {
   materialIssues: { label: 'Material Issue', module: 'Production', prefix: 'MI', idPrefix: 'mi', route: (r) => `/production/material-issue/${r.id}` },
   productionEntries: { label: 'Production Entry', module: 'Production', prefix: 'PE', idPrefix: 'pe', route: (r) => `/production/entries/${r.id}` },
   wastages: { label: 'Wastage Entry', module: 'Production', prefix: 'WST', idPrefix: 'wst', route: () => '/production/wastage' },
+  routings: { label: 'Process Route', module: 'Production', idPrefix: 'rt', route: (r) => `/production/routings?view=${r.id}` },
+  stageEntries: { label: 'Stage Output', module: 'Production', prefix: 'SE', idPrefix: 'se', route: (r) => `/production/orders/${r.productionOrderId}` },
+  jobWorkOrders: { label: 'Job Work Challan', module: 'Production', prefix: 'JWO', idPrefix: 'jwo', route: (r) => `/production/job-work/${r.id}` },
+  jobWorkReceipts: { label: 'Job Work Receipt', module: 'Production', prefix: 'JWR', idPrefix: 'jwr', route: (r) => `/production/job-work/${r.jobWorkOrderId}` },
+
+  // Quality
+  qcInspections: { label: 'QC Inspection', module: 'Quality', prefix: 'QC', idPrefix: 'qc', route: (r) => `/quality/inspections/${r.id}` },
 
   // Accounts
   receipts: { label: 'Customer Receipt', module: 'Accounts', prefix: 'RCT', idPrefix: 'rct', route: () => '/accounts/receipts' },

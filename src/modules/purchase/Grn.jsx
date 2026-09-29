@@ -9,7 +9,7 @@ import { round2 } from '../../utils/calc.js'
 import { fmtDate, fmtDateTime, inr, num, pct, today } from '../../utils/format.js'
 import { usePageTitle, fakeDelay } from '../../utils/hooks.js'
 import {
-  Badge, Button, Callout, Card, DataTable, DatePicker, DocNo, Dropdown, EmptyState, Field, FilterPanel, Input, KeyValue, PageHeader, Select, StatCard, Textarea,
+  Badge, Button, Callout, StatusBadge, Card, DataTable, DatePicker, DocNo, Dropdown, EmptyState, Field, FilterPanel, Input, KeyValue, PageHeader, Select, StatCard, Textarea,
   inDateRange, useConfirm, useToast,
 } from '../../components/ui/index.js'
 import DocumentPreview from '../../components/common/DocumentPreview.jsx'
@@ -475,7 +475,7 @@ export function GrnView() {
           </Card>
           <Card title="Items" flush>
             <div className="table-wrap">
-              <table className="table" style={{ minWidth: 760 }}>
+              <table className="table" style={{ minWidth: 860 }}>
                 <thead>
                   <tr>
                     <th>#</th>
@@ -486,11 +486,13 @@ export function GrnView() {
                     <th className="align-right">Accepted</th>
                     <th className="align-right">Rate</th>
                     <th className="align-right">Value</th>
+                    <th>QC</th>
                   </tr>
                 </thead>
                 <tbody>
                   {grn.lines.map((l, i) => {
                     const it = items.get(l.itemId)
+                    const qc = (state.qcInspections || []).find((q) => q.refCollection === 'grns' && q.refId === grn.id && q.itemId === l.itemId)
                     return (
                       <tr key={l.id}>
                         <td className="muted">{i + 1}</td>
@@ -504,6 +506,15 @@ export function GrnView() {
                         <td className="align-right num strong">{num(l.acceptedQty)} <span className="tiny muted">{it?.unit}</span></td>
                         <td className="align-right num">{inr(l.rate)}</td>
                         <td className="align-right num">{inr(Number(l.acceptedQty) * Number(l.rate || 0))}</td>
+                        <td>
+                          {qc ? (
+                            <Link to={`/quality/inspections/${qc.id}`} title={qc.number}><StatusBadge status={qc.result} /></Link>
+                          ) : Number(l.receivedQty) > 0 && can('Quality', 'add') ? (
+                            <Button size="sm" variant="soft" to={`/quality/inspections/new?type=Incoming&ref=grns&refId=${grn.id}&item=${l.itemId}`}>Inspect</Button>
+                          ) : (
+                            <StatusBadge status="Pending QC" />
+                          )}
+                        </td>
                       </tr>
                     )
                   })}

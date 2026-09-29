@@ -2,8 +2,8 @@
  * Item master — frontend-only demo. Items are stored in the mock store (localStorage).
  * Opening stock creates an "Opening" stock move; later changes go through stock adjustment.
  */
-import { useSearchParams } from 'react-router-dom'
-import { Box, Boxes, Factory, History, Layers, ShoppingCart, TriangleAlert } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { Box, Boxes, Factory, Grid3x3, History, Layers, ShoppingCart, TriangleAlert } from 'lucide-react'
 import CrudPage from '../../components/common/CrudPage.jsx'
 import { Badge, Button, StatusBadge } from '../../components/ui/index.js'
 import { useErp } from '../../store/ErpStore.jsx'
@@ -16,6 +16,13 @@ import { itemUsage, mastersCrumbs, MiniTable, SectionTitle, stockStatus } from '
 const TYPE_PREFIX = { 'Finished Good': 'FG', 'Raw Material': 'RM', 'Trading Goods': 'TR', 'Semi Finished': 'SF', Consumable: 'CN', 'Packaging Material': 'PK' }
 const TYPE_TONE = { 'Finished Good': 'brass', 'Raw Material': 'teal', 'Trading Goods': 'violet', 'Semi Finished': 'blue', Consumable: 'gray', 'Packaging Material': 'gray' }
 const STOCK_TONE = { 'In Stock': 'green', 'Low Stock': 'amber', 'Out of Stock': 'red' }
+
+/** "Pull Handle · 8" · Antique Brass" for items that are variants of a product family */
+const variantLabel = (item, families) => {
+  const fam = item.familyId && families.get(item.familyId)
+  if (!fam) return ''
+  return [fam.name, ...fam.attributes.map((a) => item.attributes?.[a.name]).filter(Boolean)].join(' · ')
+}
 
 const fields = [
   { name: 'type', label: 'Product type', type: 'select', options: PRODUCT_TYPES, required: true, section: 'Basic details' },
@@ -40,6 +47,7 @@ export default function ItemsPage() {
   const [params] = useSearchParams()
   const presetType = PRODUCT_TYPES.includes(params.get('type')) ? params.get('type') : null
   const { state } = useErp()
+  const families = byId(state.productFamilies || [])
 
   const columns = [
     { key: 'code', header: 'Code', width: 96, render: (r) => <span className="doc-no">{r.code}</span> },
@@ -55,6 +63,11 @@ export default function ItemsPage() {
             {r.category}
             {r.subCategory ? `, ${r.subCategory}` : ''}
           </div>
+          {r.familyId && families.get(r.familyId) && (
+            <div className="cell-secondary" style={{ marginTop: 2 }}>
+              <Badge tone="brass">Variant</Badge> {variantLabel(r, families)}
+            </div>
+          )}
         </div>
       ),
     },
@@ -87,6 +100,13 @@ export default function ItemsPage() {
     { key: 'type', label: 'Types', options: PRODUCT_TYPES },
     { key: 'category', label: 'Categories', options: (s) => s.categories.map((c) => c.name) },
     { key: 'brand', label: 'Brands', options: (s) => s.brands.map((b) => b.name) },
+    {
+      key: 'family',
+      label: 'Family',
+      placeholder: 'Any family',
+      options: (s) => [...(s.productFamilies || []).map((f) => ({ value: f.id, label: f.name })), { value: '__none', label: 'Not a variant' }],
+      match: (r, v) => (v === '__none' ? !r.familyId : r.familyId === v),
+    },
     { key: 'stock', label: 'Stock', placeholder: 'Any stock level', options: ['In Stock', 'Low Stock', 'Out of Stock'], match: (r, v, s) => stockStatus(itemStock(s, r.id), r.minStock) === v },
   ]
 
@@ -144,6 +164,11 @@ export default function ItemsPage() {
         { label: 'Low stock', value: num(lowStockItems(s).length), icon: TriangleAlert, tone: 'amber', foot: 'At or below minimum level', to: '/inventory/stock' },
       ]}
       viewFields={(r, s) => [
+        r.familyId && s.productFamilies?.some((f) => f.id === r.familyId) && {
+          label: 'Variant of',
+          value: <Link to={`/masters/variants/${r.familyId}`}>{variantLabel(r, byId(s.productFamilies))}</Link>,
+          span: 2,
+        },
         { label: 'Product type', value: r.type },
         { label: 'Category', value: [r.category, r.subCategory].filter(Boolean).join(', ') },
         { label: 'Brand', value: r.brand },
@@ -185,6 +210,11 @@ function ItemExtra({ item, state }) {
         {isFG && (
           <Button size="sm" icon={Layers} to={bom ? `/production/bom/${bom.id}` : `/production/bom/new?product=${item.id}`}>
             {bom ? 'Open BOM' : 'Create BOM'}
+          </Button>
+        )}
+        {item.familyId && (
+          <Button size="sm" icon={Grid3x3} to={`/masters/variants/${item.familyId}`}>
+            Variant matrix
           </Button>
         )}
         {isFG && (

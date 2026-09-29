@@ -1,6 +1,7 @@
 /**
  * Demo walkthrough — guides a presenter through the end-to-end flow:
- * masters, purchase, production, sales, accounts and reports.
+ * masters, variants, purchase, incoming QC, production stages, job work,
+ * final QC, sales, accounts and reports.
  * Steps tick automatically when a record is created in this browser
  * (records created through the UI carry `createdBy`; seed data does not).
  */
@@ -32,6 +33,12 @@ function buildSections(state) {
   const dc = latest(byUser(state.deliveryChallans))
   const inv = latest(byUser(state.salesInvoices))
   const rct = latest(byUser(state.receipts))
+  const variant = latest(byUser(state.items, (i) => i.familyId)) || latest(byUser(state.productFamilies))
+  const iqc = latest(byUser(state.qcInspections, (q) => q.type === 'Incoming'))
+  const se = latest(byUser(state.stageEntries))
+  const jwo = latest(byUser(state.jobWorkOrders))
+  const jwr = latest(byUser(state.jobWorkReceipts))
+  const fqc = latest(byUser(state.qcInspections, (q) => q.type === 'Final'))
 
   return [
     {
@@ -50,6 +57,7 @@ function buildSections(state) {
         { title: 'Create a supplier', show: 'Add a component vendor with GSTIN and credit terms.', to: '/masters/suppliers?new=1', done: Boolean(sup) },
         { title: 'Create a raw material', show: 'Lock body, spring or brass rod with HSN, GST and minimum stock.', to: '/masters/items?new=1&type=Raw%20Material', done: Boolean(rm) },
         { title: 'Create a finished product', show: 'The lock you manufacture, with sales rate and warehouse.', to: '/masters/items?new=1&type=Finished%20Good', done: Boolean(fg) },
+        { title: 'Finish and size variants', show: 'Open the Pull Handle family: one design in 4 sizes × 4 finishes, with stock and rate in each cell. Create a missing variant.', to: '/masters/variants/fam-1', done: Boolean(variant) },
       ],
     },
     {
@@ -59,6 +67,7 @@ function buildSections(state) {
         { title: 'Create a purchase order', show: 'Select the supplier and raw material; show discount, GST split and grand total.', to: sup ? `/purchase/orders/new?supplier=${sup.id}` : '/purchase/orders/new', done: Boolean(po) },
         { title: 'Receive material (GRN)', show: 'Record received, rejected and accepted quantity against the PO.', to: po ? `/purchase/grn/new?po=${po.id}` : '/purchase/grn/new', done: Boolean(grn) },
         { title: 'Stock updated', show: 'Open the stock ledger to show the GRN increasing raw material stock.', to: rm ? `/inventory/ledger?item=${rm.id}` : '/inventory/stock', done: Boolean(grn) },
+        { title: 'Incoming inspection', show: 'Inspect the received lot against the checklist: test certificate, dimensions, hardness, surface defects.', to: grn ? `/quality/inspections/new?type=Incoming&ref=grns&refId=${grn.id}&item=${grn.lines?.[0]?.itemId || ''}` : '/quality', done: Boolean(iqc) },
       ],
     },
     {
@@ -68,7 +77,11 @@ function buildSections(state) {
         { title: 'Create a bill of material', show: 'Define components per unit, e.g. lock body, shackle, 2 springs, 4 screws.', to: fg ? `/production/bom/new?product=${fg.id}` : '/production/bom/new', done: Boolean(bom) },
         { title: 'Create a production order', show: 'Plan quantity and show required materials, available stock and shortage.', to: fg ? `/production/orders/new?product=${fg.id}&qty=100` : '/production/orders/new', done: Boolean(prd) },
         { title: 'Issue material', show: 'Issue components from the raw material store to the shop floor.', to: prd ? `/production/material-issue/new?order=${prd.id}` : '/production/material-issue/new', done: Boolean(mi) },
+        { title: 'Record stage output', show: 'On the shop floor board, move pieces through die casting, machining, buffing and assembly with OK, rejected and rework counts.', to: '/production/shop-floor', done: Boolean(se) },
+        { title: 'Send for plating (job work)', show: 'Issue a job work challan to the electroplater; material moves to “At Job Workers”.', to: prd ? `/production/job-work/new?order=${prd.id}&process=Nickel%20Plating` : '/production/job-work/new', done: Boolean(jwo) },
+        { title: 'Receive plated material', show: 'Receive OK and rejected pieces back and show the job charges.', to: jwo ? `/production/job-work/${jwo.id}` : '/production/job-work', done: Boolean(jwr) },
         { title: 'Record production', show: 'Enter produced, rejected and wastage quantity with labour cost.', to: prd ? `/production/entries/new?order=${prd.id}` : '/production/entries/new', done: Boolean(pe) },
+        { title: 'Final inspection', show: 'Key operation, latch throw, plating thickness and finish checks before the batch is released.', to: prd ? `/quality/inspections/new?type=Final&ref=productionOrders&refId=${prd.id}&item=${prd.productId}` : '/quality', done: Boolean(fqc) },
         { title: 'Finished goods stock', show: 'Show good units added to the Finished Goods Godown and the batch cost.', to: fg ? `/inventory/ledger?item=${fg.id}` : '/inventory/stock', done: Boolean(pe) },
       ],
     },

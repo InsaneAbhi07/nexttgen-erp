@@ -32,7 +32,12 @@ export const STOCK_COLLECTIONS = [
   'stockAdjustments',
   'materialIssues',
   'productionEntries',
+  'jobWorkOrders',
+  'jobWorkReceipts',
 ]
+
+const JOB_WORK_WH = 'wh-jbw'
+const SCRAP_WH = 'wh-scr'
 
 export function movesFor(collection, doc) {
   if (!doc || doc.historical) return []
@@ -95,6 +100,25 @@ export function movesFor(collection, doc) {
         ? [mv(doc, collection, 0, { itemId: doc.productId, warehouseId: doc.warehouseId, qty: good, type: 'Production' })]
         : []
     }
+    case 'jobWorkOrders':
+      // Material leaves our store and sits "At Job Workers" until it comes back.
+      return lines
+        .filter((l) => Number(l.qty) > 0)
+        .flatMap((l, i) => [
+          mv(doc, collection, `${i}o`, { itemId: l.itemId, warehouseId: doc.fromWarehouseId, qty: -Number(l.qty), type: 'Job Work Out' }),
+          mv(doc, collection, `${i}i`, { itemId: l.itemId, warehouseId: JOB_WORK_WH, qty: Number(l.qty), type: 'At Job Worker' }),
+        ])
+    case 'jobWorkReceipts':
+      // Accepted pieces return to store, rejected pieces go to the scrap yard.
+      return lines.flatMap((l, i) => {
+        const ok = Number(l.receivedQty) || 0
+        const rej = Number(l.rejectedQty) || 0
+        const out = []
+        if (ok + rej > 0) out.push(mv(doc, collection, `${i}o`, { itemId: l.itemId, warehouseId: JOB_WORK_WH, qty: -(ok + rej), type: 'Job Work Return' }))
+        if (ok > 0) out.push(mv(doc, collection, `${i}i`, { itemId: l.itemId, warehouseId: doc.returnWarehouseId, qty: ok, type: 'Job Work In' }))
+        if (rej > 0) out.push(mv(doc, collection, `${i}r`, { itemId: l.itemId, warehouseId: SCRAP_WH, qty: rej, type: 'Job Work Rejection' }))
+        return out
+      })
     default:
       return []
   }
@@ -203,6 +227,25 @@ export function syncStatuses(state) {
     if (p > 0 || issued.has(po.id)) return 'In Progress'
     return ['In Progress', 'Completed'].includes(po.status) ? 'Released' : null
   })
+
+  // Job work challans ← receipts
+  const backByJwoItem = {}
+  ;(s.jobWorkReceipts || []).forEach((r) => {
+    ;(r.lines || []).forEach((l) => {
+      const k = `${r.jobWorkOrderId}|${l.itemId}`
+      backByJwoItem[k] = (backByJwoItem[k] || 0) + (Number(l.receivedQty) || 0) + (Number(l.rejectedQty) || 0)
+    })
+  })
+  if (s.jobWorkOrders) {
+    s.jobWorkOrders = setIfChanged(s.jobWorkOrders, (jw) => {
+      if (jw.status === 'Closed') return null
+      const lines = jw.lines || []
+      const back = lines.map((l) => backByJwoItem[`${jw.id}|${l.itemId}`] || 0)
+      if (lines.length && lines.every((l, i) => back[i] >= Number(l.qty))) return 'Received'
+      if (back.some((q) => q > 0)) return 'Partially Received'
+      return 'Sent'
+    })
+  }
 
   return s
 }

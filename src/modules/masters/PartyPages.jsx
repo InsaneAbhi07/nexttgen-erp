@@ -5,11 +5,11 @@
 import { useMemo } from 'react'
 import { BookOpen, IndianRupee, ShoppingCart, Receipt, Users, Truck, AlertCircle, Wallet } from 'lucide-react'
 import CrudPage from '../../components/common/CrudPage.jsx'
-import { Button, DocNo, KeyValue, Progress, StatusBadge } from '../../components/ui/index.js'
+import { Badge, Button, DocNo, KeyValue, Progress, StatusBadge } from '../../components/ui/index.js'
 import { useErp } from '../../store/ErpStore.jsx'
 import { outstandingRows, purchaseInvoiceStatus, salesInvoiceStatus } from '../../store/selectors.js'
 import { nextCode } from '../../store/numbering.js'
-import { STATE_NAMES } from '../../data/constants.js'
+import { JOB_WORK_PROCESSES, STATE_NAMES } from '../../data/constants.js'
 import { fmtDate, inr, inrCompact, num } from '../../utils/format.js'
 import { customerUsage, formatMobile, mastersCrumbs, MiniTable, SectionTitle, supplierUsage, validateGstin, validEmail, validMobile } from './shared.jsx'
 
@@ -235,23 +235,58 @@ function CustomerExtra({ customer, state, out }) {
   )
 }
 
+const JOB_WORK_FIELDS = [
+  { name: 'jobWorker', label: 'Job worker', type: 'switch', checkboxLabel: 'Does plating, buffing or other job work for us', section: 'Job work', span: 'full' },
+  {
+    name: 'processes',
+    label: 'Processes',
+    span: 'full',
+    placeholder: 'Nickel Plating, Antique Finish',
+    hint: `Comma-separated, e.g. ${JOB_WORK_PROCESSES.slice(0, 3).join(', ')}`,
+    visible: (v) => Boolean(v.jobWorker),
+  },
+]
+
+const toList = (v) => (Array.isArray(v) ? v : String(v || '').split(',')).map((x) => x.trim()).filter(Boolean)
+
+const supplierTypeCol = {
+  key: 'jobWorker',
+  header: 'Type',
+  accessor: (r) => (r.jobWorker ? `Job worker ${(r.processes || []).join(' ')}` : 'Material supplier'),
+  render: (r) =>
+    r.jobWorker ? (
+      <div>
+        <Badge tone="violet">Job worker</Badge>
+        <div className="cell-secondary" style={{ marginTop: 3 }}>{(r.processes || []).join(', ')}</div>
+      </div>
+    ) : (
+      <span className="ink-2">Material</span>
+    ),
+}
+
 export function SuppliersPage() {
   const out = useOutstanding('payable')
+  const cols = partyCols(out, false)
   return (
     <CrudPage
       collection="suppliers"
       singular="Supplier"
       title="Suppliers"
-      subtitle="Vendors for raw materials, components, packaging and traded goods."
+      subtitle="Vendors for raw materials, components, packaging and traded goods, and job workers for plating and finishing."
       breadcrumbs={mastersCrumbs('Suppliers')}
-      fields={partyFields(false)}
-      columns={partyCols(out, false)}
-      filters={[stateFilter('suppliers'), termsFilter, statusFilter]}
-      defaults={{ paymentTerms: '30 Days', state: 'Uttar Pradesh', openingBalance: 0 }}
-      validate={validateParty('suppliers')}
+      fields={[...partyFields(false), ...JOB_WORK_FIELDS]}
+      columns={[cols[0], supplierTypeCol, ...cols.slice(1)]}
+      filters={[
+        { key: 'kind', label: 'Type', options: ['Material supplier', 'Job worker'], placeholder: 'All types', match: (r, v) => (v === 'Job worker' ? Boolean(r.jobWorker) : !r.jobWorker) },
+        stateFilter('suppliers'),
+        termsFilter,
+        statusFilter,
+      ]}
+      defaults={{ paymentTerms: '30 Days', state: 'Uttar Pradesh', openingBalance: 0, jobWorker: false }}
+      validate={(v, s) => ({ ...validateParty('suppliers')(v, s), ...(v.jobWorker && !toList(v.processes).length ? { processes: 'Enter at least one process' } : {}) })}
       beforeSave={(v, s) => {
         const { creditLimit, ...rest } = normaliseParty('suppliers', 'SUP')(v, s)
-        return { itemIds: [], ...rest }
+        return { itemIds: [], ...rest, jobWorker: Boolean(v.jobWorker), processes: v.jobWorker ? toList(v.processes) : [] }
       }}
       exportName="suppliers"
       searchPlaceholder="Search by name, code or contact person…"
@@ -268,7 +303,11 @@ export function SuppliersPage() {
           { label: 'Open purchase orders', value: num(openPos), icon: ShoppingCart, tone: 'teal', foot: 'Awaiting material', to: '/purchase/orders' },
         ]
       }}
-      viewFields={(r) => [...baseView(r), { label: 'Opening balance', value: inr(r.openingBalance) }]}
+      viewFields={(r) => [
+        ...baseView(r),
+        { label: 'Opening balance', value: inr(r.openingBalance) },
+        r.jobWorker && { label: 'Job worker for', value: (r.processes || []).join(', '), span: 2 },
+      ]}
       viewExtra={(r, s) => <SupplierExtra supplier={r} state={s} out={out[r.id]} />}
       deleteGuard={(r, s) => supplierUsage(s, r.id)}
     />

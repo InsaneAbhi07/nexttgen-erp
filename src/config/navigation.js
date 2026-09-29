@@ -2,7 +2,7 @@
  * Sidebar navigation. Every path here maps to a real page (no dead links).
  * `module` ties the entry to the role permission matrix.
  */
-import { BarChart3, Boxes, Database, Factory, Landmark, LayoutDashboard, Settings, ShieldCheck, ShoppingCart, Receipt } from 'lucide-react'
+import { BarChart3, Boxes, ClipboardCheck, Database, Factory, Landmark, LayoutDashboard, Settings, ShieldCheck, ShoppingCart, Receipt } from 'lucide-react'
 
 export const NAV = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard', module: 'Dashboard' },
@@ -10,6 +10,7 @@ export const NAV = [
     key: 'masters', label: 'Masters', icon: Database, base: '/masters', module: 'Masters',
     children: [
       { label: 'Items', to: '/masters/items' },
+      { label: 'Product Variants', to: '/masters/variants' },
       { label: 'Categories', to: '/masters/categories' },
       { label: 'Brands', to: '/masters/brands' },
       { label: 'Units', to: '/masters/units' },
@@ -53,11 +54,22 @@ export const NAV = [
     key: 'production', label: 'Production', icon: Factory, base: '/production', module: 'Production',
     children: [
       { label: 'Bill of Material', to: '/production/bom' },
+      { label: 'Process Routes', to: '/production/routings' },
       { label: 'Production Orders', to: '/production/orders' },
+      { label: 'Shop Floor (WIP)', to: '/production/shop-floor' },
       { label: 'Material Issue', to: '/production/material-issue' },
       { label: 'Production Entry', to: '/production/entries' },
+      { label: 'Job Work', to: '/production/job-work' },
       { label: 'Production Costing', to: '/production/costing' },
       { label: 'Wastage & Rejection', to: '/production/wastage' },
+    ],
+  },
+  {
+    key: 'quality', label: 'Quality', icon: ClipboardCheck, base: '/quality', module: 'Quality',
+    children: [
+      { label: 'QC Dashboard', to: '/quality', end: true },
+      { label: 'Inspections', to: '/quality/inspections' },
+      { label: 'QC Plans', to: '/quality/plans' },
     ],
   },
   {

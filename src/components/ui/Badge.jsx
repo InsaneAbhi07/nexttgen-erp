@@ -28,6 +28,9 @@ const STATUS_TONES = {
   Wastage: 'amber', Rejection: 'red', Damage: 'violet', Scrap: 'gray',
   // stock
   'In Stock': 'green', 'Low Stock': 'amber', 'Out of Stock': 'red',
+  // job work & quality
+  'Accepted with Deviation': 'amber', Rework: 'amber', Pass: 'green', Fail: 'red', Closed: 'gray',
+  'In-house': 'teal', 'Job Work': 'violet', Incoming: 'blue', 'In-process': 'violet', Final: 'teal', 'Pending QC': 'amber',
 }
 
 export function statusTone(status) {

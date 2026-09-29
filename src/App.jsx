@@ -15,6 +15,7 @@ const PurchaseModule = lazy(() => import('./modules/purchase/index.jsx'))
 const SalesModule = lazy(() => import('./modules/sales/index.jsx'))
 const InventoryModule = lazy(() => import('./modules/inventory/index.jsx'))
 const ProductionModule = lazy(() => import('./modules/production/index.jsx'))
+const QualityModule = lazy(() => import('./modules/quality/index.jsx'))
 const AccountsModule = lazy(() => import('./modules/accounts/index.jsx'))
 const ReportsModule = lazy(() => import('./modules/reports/index.jsx'))
 const UsersModule = lazy(() => import('./modules/users/index.jsx'))
@@ -48,6 +49,7 @@ export default function App() {
         <Route path="sales/*" element={<SalesModule />} />
         <Route path="inventory/*" element={<InventoryModule />} />
         <Route path="production/*" element={<ProductionModule />} />
+        <Route path="quality/*" element={<QualityModule />} />
         <Route path="accounts/*" element={<AccountsModule />} />
         <Route path="reports/*" element={<ReportsModule />} />
         <Route path="users/*" element={<UsersModule />} />
