@@ -8,13 +8,14 @@
  * Nothing here talks to a server. The result is stored in localStorage.
  */
 import { calcTotals, isInterState, round2 } from '../utils/calc.js'
-import { addDays, today } from '../utils/format.js'
+import { addDays, daysBetween, today } from '../utils/format.js'
 import { formatDocNumber } from '../store/numbering.js'
 import { rebuildAllMoves, syncStatuses } from '../store/stockEngine.js'
 import { SALES_PERSONS, TRANSPORTERS, PERMISSION_MODULES, PERMISSION_TYPES, stateCode } from './constants.js'
 import { qcChecklist, qcPlanKey, sampleSize, variantName, variantRates } from '../store/mfg.js'
+import { buildPayroll, eachDate, isWeeklyOff, leaveDaysCount, shiftMonth } from '../store/hr.js'
 
-export const DATA_VERSION = 4
+export const DATA_VERSION = 5
 
 function mulberry32(seed) {
   let a = seed
@@ -258,16 +259,72 @@ const USERS = [
   ['usr-12', 'Sunita Devi', 'sunita.devi@nexttgen.com', '+91 93590 11874', 'Store User', 'Stores', 'Inactive'],
 ]
 
+/* HR — employees on the payroll. Monthly staff: [gross]; daily wage staff: [rate per day].
+   [id, name, gender, department, designation, employmentType, joinedDaysAgo, shift, weeklyOff, salaryType, amount, userId, pf, esi, paymentMode, fatherName] */
+const EMPLOYEES = [
+  ['emp-01', 'Rajesh Kumar', 'Male', 'Operations', 'Plant Manager', 'Permanent', 2140, 'General', 'Sunday', 'Monthly', 62000, 'usr-03', true, false, 'Bank', 'Om Prakash'],
+  ['emp-02', 'Pooja Agarwal', 'Female', 'Accounts', 'Accounts Executive', 'Permanent', 1510, 'General', 'Sunday', 'Monthly', 34000, 'usr-04', true, false, 'Bank', 'Sunil Agarwal'],
+  ['emp-03', 'Amit Verma', 'Male', 'Purchase', 'Purchase Executive', 'Permanent', 1320, 'General', 'Sunday', 'Monthly', 30000, 'usr-05', true, false, 'Bank', 'Ramesh Verma'],
+  ['emp-04', 'Neha Gupta', 'Female', 'Sales', 'Sales Executive', 'Permanent', 1105, 'General', 'Sunday', 'Monthly', 32000, 'usr-06', true, false, 'Bank', 'Anil Gupta'],
+  ['emp-05', 'Karan Singh', 'Male', 'Sales', 'Sales Executive', 'Permanent', 810, 'General', 'Sunday', 'Monthly', 28000, 'usr-09', true, false, 'Bank', 'Mahendra Singh'],
+  ['emp-06', 'Arjun Mehra', 'Male', 'Sales', 'Sales Executive', 'Probation', 150, 'General', 'Sunday', 'Monthly', 24000, 'usr-10', true, false, 'Bank', 'Vinod Mehra'],
+  ['emp-07', 'Suresh Yadav', 'Male', 'Stores', 'Store Keeper', 'Permanent', 1830, 'General', 'Sunday', 'Monthly', 22000, 'usr-07', true, false, 'Bank', 'Ram Naresh Yadav'],
+  ['emp-08', 'Mohd. Irfan', 'Male', 'Production', 'Production Supervisor', 'Permanent', 1640, 'General', 'Sunday', 'Monthly', 36000, 'usr-08', true, false, 'Bank', 'Mohd. Yusuf'],
+  ['emp-09', 'Deepak Chauhan', 'Male', 'Quality', 'QC Inspector', 'Permanent', 905, 'General', 'Sunday', 'Monthly', 21000, 'usr-11', true, true, 'Bank', 'Rajpal Chauhan'],
+  ['emp-10', 'Ramesh Pal', 'Male', 'Stores', 'Dispatch In-charge', 'Permanent', 1420, 'General', 'Sunday', 'Monthly', 20000, '', true, true, 'Bank', 'Shyam Lal Pal'],
+  ['emp-11', 'Kavita Singh', 'Female', 'Management', 'HR & Admin Executive', 'Permanent', 610, 'General', 'Sunday', 'Monthly', 26000, '', true, false, 'Bank', 'Devendra Singh'],
+  ['emp-12', 'Rafiq Ahmed', 'Male', 'Production', 'Die-casting Operator', 'Permanent', 1710, 'Morning', 'Friday', 'Monthly', 17500, '', true, true, 'Bank', 'Shafiq Ahmed'],
+  ['emp-13', 'Sunil Kumar', 'Male', 'Production', 'Machine Operator', 'Permanent', 1215, 'General', 'Sunday', 'Monthly', 16500, '', true, true, 'Bank', 'Harish Chandra'],
+  ['emp-14', 'Mukesh Yadav', 'Male', 'Production', 'Machine Operator', 'Permanent', 960, 'Evening', 'Sunday', 'Monthly', 16000, '', true, true, 'Bank', 'Lalta Prasad'],
+  ['emp-15', 'Salim Ansari', 'Male', 'Production', 'Buffing Operator', 'Permanent', 1015, 'Morning', 'Sunday', 'Monthly', 15500, '', true, true, 'Bank', 'Kalim Ansari'],
+  ['emp-16', 'Ravi Shankar', 'Male', 'Production', 'Assembly Worker', 'Permanent', 705, 'General', 'Sunday', 'Monthly', 15000, '', true, true, 'Bank', 'Shiv Shankar'],
+  ['emp-17', 'Imran Qureshi', 'Male', 'Production', 'Die-casting Operator', 'Contract', 410, 'Evening', 'Friday', 'Monthly', 15000, '', true, true, 'Bank', 'Salman Qureshi'],
+  ['emp-18', 'Geeta Devi', 'Female', 'Packaging', 'Packer', 'Permanent', 1120, 'General', 'Sunday', 'Monthly', 13500, '', true, true, 'Bank', 'Mahesh Chand'],
+  ['emp-19', 'Shabnam Begum', 'Female', 'Production', 'Assembly Worker', 'Permanent', 655, 'General', 'Sunday', 'Monthly', 13500, '', true, true, 'Bank', 'Nasir Khan'],
+  ['emp-20', 'Sanjay Tomar', 'Male', 'Maintenance', 'Maintenance Fitter', 'Permanent', 1300, 'General', 'Sunday', 'Monthly', 19000, '', true, true, 'Bank', 'Brijesh Tomar'],
+  ['emp-21', 'Arif Khan', 'Male', 'Operations', 'Driver', 'Permanent', 890, 'General', 'Sunday', 'Monthly', 16000, '', true, true, 'Bank', 'Akhtar Khan'],
+  ['emp-22', 'Rekha Kumari', 'Female', 'Packaging', 'Packer', 'Daily Wage', 300, 'General', 'Sunday', 'Daily', 520, '', false, true, 'Cash', 'Bhagwan Das'],
+  ['emp-23', 'Pappu Singh', 'Male', 'Production', 'Helper', 'Daily Wage', 250, 'General', 'Sunday', 'Daily', 480, '', false, true, 'Cash', 'Jaswant Singh'],
+  ['emp-24', 'Mohit Sharma', 'Male', 'Production', 'Buffing Operator', 'Contract', 200, 'Morning', 'Sunday', 'Daily', 600, '', false, true, 'Bank', 'Naresh Sharma'],
+  ['emp-25', 'Priya Saxena', 'Female', 'Accounts', 'Accounts Executive', 'Probation', 18, 'General', 'Sunday', 'Monthly', 22000, '', true, false, 'Bank', 'Alok Saxena'],
+]
+
+// [MM-DD, name, type] — festival dates are indicative and repeat every year in the demo
+const HOLIDAYS = [
+  ['01-26', 'Republic Day', 'National'],
+  ['03-04', 'Holi', 'Festival'],
+  ['03-21', 'Eid-ul-Fitr', 'Festival'],
+  ['04-14', 'Dr. Ambedkar Jayanti', 'National'],
+  ['08-15', 'Independence Day', 'National'],
+  ['08-28', 'Raksha Bandhan', 'Festival'],
+  ['09-04', 'Janmashtami', 'Festival'],
+  ['10-02', 'Gandhi Jayanti', 'National'],
+  ['10-20', 'Dussehra', 'Festival'],
+  ['11-08', 'Diwali', 'Festival'],
+  ['11-09', 'Govardhan Puja', 'Festival'],
+  ['11-11', 'Bhai Dooj', 'Festival'],
+  ['12-25', 'Christmas', 'Festival'],
+]
+
+const LEAVE_TYPES = [
+  { id: 'lt-cl', name: 'Casual Leave', code: 'CL', paid: true, annualQuota: 12, carryForward: false, maxCarryForward: 0, encashable: false, allowHalfDay: true, maxConsecutive: 3, noticeDays: 1, gender: 'All', description: 'Short personal work or emergencies. Not more than 3 days at a time.' },
+  { id: 'lt-sl', name: 'Sick Leave', code: 'SL', paid: true, annualQuota: 7, carryForward: false, maxCarryForward: 0, encashable: false, allowHalfDay: true, maxConsecutive: 0, noticeDays: 0, gender: 'All', description: 'Illness or injury. Medical certificate needed for more than 2 days.' },
+  { id: 'lt-el', name: 'Earned Leave', code: 'EL', paid: true, annualQuota: 15, carryForward: true, maxCarryForward: 30, encashable: true, allowHalfDay: false, maxConsecutive: 0, noticeDays: 7, gender: 'All', description: 'Planned leave earned for days worked. Apply at least 7 days in advance.' },
+  { id: 'lt-lwp', name: 'Leave Without Pay', code: 'LWP', paid: false, annualQuota: 0, carryForward: false, maxCarryForward: 0, encashable: false, allowHalfDay: true, maxConsecutive: 0, noticeDays: 0, gender: 'All', description: 'Unpaid leave once paid leave is exhausted. Deducted from salary.' },
+  { id: 'lt-ml', name: 'Maternity Leave', code: 'ML', paid: true, annualQuota: 182, carryForward: false, maxCarryForward: 0, encashable: false, allowHalfDay: false, maxConsecutive: 0, noticeDays: 30, gender: 'Female', description: 'As per the Maternity Benefit Act — 26 weeks for the first two children.' },
+]
+
 // Permission shorthand: v=view a=add e=edit d=delete p=approve r=print x=export
+// Payroll (salary generation and approval) is reserved for the owner by default.
 const ROLE_PERMS = {
   'Super Admin': { '*': 'vaedprx' },
-  Admin: { '*': 'vaedprx' },
-  Manager: { '*': 'vaeprx', 'Users & Access': 'v', Settings: 'v' },
-  Accountant: { Dashboard: 'v', Accounts: 'vaedprx', Sales: 'vrx', Purchase: 'vrx', Reports: 'vrx', Masters: 'vae', Inventory: 'v' },
+  Admin: { '*': 'vaedprx', Payroll: 'vrx' },
+  Manager: { '*': 'vaeprx', 'Users & Access': 'v', Settings: 'v', Payroll: '' },
+  Accountant: { Dashboard: 'v', Accounts: 'vaedprx', Sales: 'vrx', Purchase: 'vrx', Reports: 'vrx', Masters: 'vae', Inventory: 'v', HR: 'v', Payroll: 'vrx' },
   'Purchase User': { Dashboard: 'v', Purchase: 'vaerx', Inventory: 'v', Quality: 'v', Masters: 'va', Reports: 'vr' },
   'Sales User': { Dashboard: 'v', Sales: 'vaerx', Inventory: 'v', Masters: 'va', Reports: 'vr', Accounts: 'v' },
   'Store User': { Dashboard: 'v', Inventory: 'vaer', Purchase: 'va', Production: 'v', Quality: 'va', Masters: 'v', Reports: 'v' },
-  'Production User': { Dashboard: 'v', Production: 'vaer', Quality: 'vaer', Inventory: 'v', Masters: 'v', Reports: 'v' },
+  'Production User': { Dashboard: 'v', Production: 'vaer', Quality: 'vaer', Inventory: 'v', Masters: 'v', Reports: 'v', HR: 'va' },
   Employee: { Dashboard: 'v', Quality: 'v', Reports: 'v' },
 }
 const ROLE_DESC = {
@@ -1232,6 +1289,181 @@ export function buildSeedData() {
   }
 
   /* ---------------- Assign document numbers (chronological) ---------------- */
+  /* ---------------- HR: employees, holidays, leave, attendance, payroll ---------------- */
+  // Separate generator so HR data never shifts the rest of the demo dataset.
+  const hrRand = mulberry32(260814)
+  const hri = (a, b) => Math.floor(hrRand() * (b - a + 1)) + a
+  const hrChance = (p) => hrRand() < p
+  const hrPick = (arr) => arr[Math.floor(hrRand() * arr.length)]
+  const hrYear = Number(TODAY.slice(0, 4))
+  const BANKS = [['HDFC Bank', 'HDFC0001234'], ['State Bank of India', 'SBIN0000613'], ['Punjab National Bank', 'PUNB0123400'], ['ICICI Bank', 'ICIC0000471']]
+  const LOCALITIES = ['Sarai Sultani', 'Ramghat Road', 'Jamalpur', 'Dodhpur', 'Quarsi', 'Sasni Gate', 'Talanagri', 'Mahendra Nagar']
+
+  const holidays = [hrYear - 1, hrYear].flatMap((y) =>
+    HOLIDAYS.map(([md, name, type]) => ({ id: `hol-${y}-${md}`, name, date: `${y}-${md}`, type, description: '', status: 'Active', createdAt: at(`${y - 1}-12-20`) })),
+  )
+  const holidaySet = new Set(holidays.map((h) => h.date))
+  const leaveTypes = LEAVE_TYPES.map((t) => ({ ...t, status: 'Active', createdAt: at(`${hrYear - 1}-12-20`) }))
+
+  const employees = EMPLOYEES.map(([id, name, gender, department, designation, employmentType, joinedAgo, shift, weeklyOff, salaryType, amount, userId, pf, esi, paymentMode, fatherName], i) => {
+    const n = i + 1
+    const [bankName, ifsc] = BANKS[i % BANKS.length]
+    const monthly = salaryType === 'Monthly'
+    const basic = monthly ? Math.round((amount * 0.5) / 100) * 100 : 0
+    const hra = monthly ? Math.round((basic * 0.4) / 100) * 100 : 0
+    const conveyance = monthly ? 1600 : 0
+    const cash = paymentMode === 'Cash'
+    const joiningDate = addDays(TODAY, -joinedAgo)
+    return {
+      id, code: `EMP-${String(n).padStart(4, '0')}`, name, fatherName, gender,
+      dob: addDays(TODAY, -(365 * hri(22, 48) + hri(0, 364))),
+      mobile: `+91 9${hri(1000, 9999)} ${hri(10000, 99999)}`,
+      email: userId ? USERS.find((u) => u[0] === userId)[2] : '',
+      address: `${hrPick(LOCALITIES)}, Aligarh, Uttar Pradesh 2020${hri(0, 2)}${hri(1, 9)}`,
+      department, designation, employmentType, joiningDate, exitDate: '', shift, weeklyOff, userId,
+      salaryType, basic, hra, conveyance, specialAllowance: monthly ? amount - basic - hra - conveyance : 0, dailyRate: monthly ? 0 : amount,
+      pfApplicable: pf, esiApplicable: esi,
+      uan: pf ? `10${hri(10000000, 99999999)}${hri(10, 99)}` : '',
+      esicNo: esi ? `69${hri(10000000, 99999999)}` : '',
+      pan: monthly && amount > 20000 ? `${'ABCDEFGHJK'[n % 10]}${'PQRSTUVWXY'[(n * 3) % 10]}${'LMNPQ'[n % 5]}P${name[0].toUpperCase()}${hri(1000, 9999)}${'ABCDEFGHJK'[(n * 7) % 10]}` : '',
+      paymentMode, bankName: cash ? '' : bankName, bankAccount: cash ? '' : `${hri(1000, 9999)}${hri(10000000, 99999999)}`, ifsc: cash ? '' : ifsc,
+      status: 'Active', createdAt: at(joiningDate),
+    }
+  })
+  const hrBase = { employees, holidays, leaveTypes, attendance: [], leaveApplications: [] }
+  const isOff = (emp, d) => holidaySet.has(d) || isWeeklyOff(emp, d)
+  const nextWorkday = (emp, d) => {
+    let x = d
+    while (isOff(emp, x)) x = addDays(x, 1)
+    return x
+  }
+  const approverOf = (emp) => (emp.id === 'emp-01' ? 'Vikram Malhotra' : emp.department === 'Production' && emp.id !== 'emp-08' ? 'Mohd. Irfan' : 'Rajesh Kumar')
+
+  // Leave applications — history over the last three months plus a few upcoming requests
+  const HR_START = `${shiftMonth(TODAY.slice(0, 7), -3)}-01`
+  const LEAVE_REASONS = {
+    'lt-cl': ['Family function', 'Personal work at the bank', 'Parent-teacher meeting', 'Going to the village'],
+    'lt-sl': ['Fever', 'Viral infection', 'Back pain', 'Stomach infection'],
+    'lt-el': ['Sister’s wedding', 'Family trip to Haridwar', 'House shifting'],
+    'lt-lwp': ['Personal work, paid leave used up', 'Extended stay in the village'],
+  }
+  const leaveApplications = []
+  const leaveDates = new Map()
+  const addLeave = (emp, leaveTypeId, from, len, status, halfDay = false) => {
+    let to = from
+    if (!halfDay) {
+      let n = 0
+      for (;;) {
+        if (!isOff(emp, to)) n += 1
+        if (n >= len) break
+        to = addDays(to, 1)
+      }
+    }
+    const taken = leaveDates.get(emp.id) || new Set()
+    let clash = from < emp.joiningDate
+    eachDate(from, to, (d) => (clash = clash || taken.has(d)))
+    if (clash) return
+    eachDate(from, to, (d) => taken.add(d))
+    leaveDates.set(emp.id, taken)
+    const date = status === 'Pending' ? addDays(TODAY, -hri(0, 1)) : clampToday(addDays(from, leaveTypeId === 'lt-sl' ? 0 : -hri(1, 8)))
+    const decided = status === 'Approved' || status === 'Rejected'
+    leaveApplications.push({
+      id: `lv-${leaveApplications.length + 1}`, number: '', date, employeeId: emp.id, leaveTypeId, from, to, halfDay,
+      days: leaveDaysCount(hrBase, emp, from, to, halfDay), reason: hrPick(LEAVE_REASONS[leaveTypeId]), status,
+      actionBy: decided ? approverOf(emp) : '', actionAt: decided ? at(clampToday(addDays(date, hri(0, 1))), 17) : '',
+      actionRemarks: status === 'Rejected' ? 'Dispatch schedule is tight that week. Please take it later.' : '',
+      createdAt: at(date, hri(9, 11)),
+    })
+  }
+  employees.forEach((emp) => {
+    const count = hri(0, 3)
+    for (let k = 0; k < count; k++) {
+      const roll = hrRand()
+      const lt = roll < 0.5 ? 'lt-cl' : roll < 0.8 ? 'lt-sl' : roll < 0.9 ? 'lt-el' : 'lt-lwp'
+      const len = lt === 'lt-cl' ? hri(1, 2) : lt === 'lt-sl' ? hri(1, 3) : lt === 'lt-el' ? hri(3, 5) : hri(1, 2)
+      const from = nextWorkday(emp, addDays(HR_START, hri(0, daysBetween(HR_START, TODAY) - 2)))
+      if (from >= TODAY) continue
+      const half = ['lt-cl', 'lt-sl'].includes(lt) && len === 1 && hrChance(0.25)
+      addLeave(emp, lt, from, len, hrChance(0.9) ? 'Approved' : 'Rejected', half)
+    }
+  })
+  const empById = new Map(employees.map((e) => [e.id, e]))
+  ;[['emp-18', 'lt-sl', 0, 1, 'Pending'], ['emp-13', 'lt-cl', 3, 2, 'Pending'], ['emp-16', 'lt-cl', 1, 1, 'Pending'], ['emp-04', 'lt-el', 12, 4, 'Pending'], ['emp-02', 'lt-el', 20, 5, 'Approved']].forEach(
+    ([id, lt, offset, len, status]) => {
+      const emp = empById.get(id)
+      addLeave(emp, lt, nextWorkday(emp, addDays(TODAY, offset)), len, status)
+    },
+  )
+  const approvedDay = new Map()
+  leaveApplications
+    .filter((l) => l.status === 'Approved')
+    .forEach((l) => eachDate(l.from, l.to, (d) => approvedDay.set(`${l.employeeId}|${d}`, l)))
+
+  // Daily attendance sheets from the start of the range up to today
+  const SHIFT_MINS = { General: [570, 1080], Morning: [360, 840], Evening: [840, 1320] }
+  const hm = (mins) => `${pad(Math.floor(mins / 60))}:${pad(mins % 60)}`
+  const floorStaff = (e) => ['Production', 'Packaging', 'Maintenance'].includes(e.department)
+  const notMarkedToday = new Set(['emp-18', 'emp-21', 'emp-23'])
+  const attendance = []
+  eachDate(HR_START, TODAY, (date) => {
+    const entries = {}
+    employees.forEach((emp) => {
+      if (date < emp.joiningDate) return
+      if (date === TODAY && (notMarkedToday.has(emp.id) || emp.shift === 'Evening')) return
+      const lv = approvedDay.get(`${emp.id}|${date}`)
+      if (lv && !lv.halfDay) return
+      const [start, end] = SHIFT_MINS[emp.shift]
+      if (isOff(emp, date)) {
+        if (floorStaff(emp) && !holidaySet.has(date) && date !== TODAY && hrChance(0.04)) entries[emp.id] = { status: 'P', in: hm(start - hri(0, 10)), out: hm(end - 120), ot: 0, remarks: 'Called in for urgent dispatch' }
+        return
+      }
+      if (lv?.halfDay) {
+        entries[emp.id] = { status: 'HD', in: hm(start + 270 + hri(0, 10)), out: date === TODAY ? '' : hm(end + hri(0, 10)), ot: 0, remarks: 'Half-day leave in first half' }
+        return
+      }
+      const roll = hrRand()
+      if (roll < 0.025) {
+        entries[emp.id] = { status: 'A', remarks: hrChance(0.5) ? 'Not informed' : '' }
+        return
+      }
+      if (roll < 0.035) {
+        entries[emp.id] = { status: 'L', leaveTypeId: 'lt-sl', remarks: 'Informed on phone' }
+        return
+      }
+      const late = hrChance(0.08)
+      const inMin = late ? start + hri(12, 45) : start - hri(0, 15) + hri(0, 8)
+      if (roll < 0.06) {
+        entries[emp.id] = { status: 'HD', in: hm(inMin), out: hm(start + 270), ot: 0, remarks: 'Left after first half' }
+        return
+      }
+      if (date === TODAY) {
+        entries[emp.id] = { status: 'P', in: hm(inMin), out: '', ot: 0 }
+        return
+      }
+      const ot = floorStaff(emp) && emp.shift !== 'Evening' && hrChance(0.12) ? hri(1, 3) : 0
+      entries[emp.id] = { status: 'P', in: hm(inMin), out: hm(end + ot * 60 + hri(-5, 15)), ot }
+    })
+    if (Object.keys(entries).length) attendance.push({ id: `att-${date}`, date, name: date, entries, markedBy: 'Kavita Singh', createdAt: at(date, 10, hri(0, 30)) })
+  })
+
+  // Salary sheets — the two months before last are paid; last month is waiting for the owner to generate
+  const hrState = { employees, holidays, leaveTypes, attendance, leaveApplications }
+  const PAYROLL_ADJ = { 3: [['emp-12', { advance: 2000 }]], 2: [['emp-04', { incentive: 2500 }], ['emp-23', { advance: 1000 }]] }
+  const payrollRuns = [3, 2].map((back, i) => {
+    const ym = shiftMonth(TODAY.slice(0, 7), -back)
+    const next = shiftMonth(ym, 1)
+    const run = buildPayroll(hrState, ym, (PAYROLL_ADJ[back] || []).map(([employeeId, adjustments]) => ({ employeeId, adjustments })))
+    const date = clampToday(`${next}-03`)
+    const bank = run.slips.filter((s) => s.paymentMode !== 'Cash').reduce((a, s) => a + s.netPay, 0)
+    return {
+      id: `sal-${i + 1}`, number: '', date, month: ym, status: 'Paid', slips: run.slips, totals: run.totals, remarks: '',
+      generatedBy: 'Vikram Malhotra', approvedBy: 'Vikram Malhotra', approvedAt: at(date, 17),
+      paidOn: clampToday(`${next}-07`), paymentRef: `NEFT batch ${ym.replace('-', '')}`,
+      disbursements: [{ accountId: 'acc-hdfc', amount: bank }, { accountId: 'acc-cash', amount: run.totals.net - bank }].filter((d) => d.amount),
+      createdAt: at(date, 16),
+    }
+  })
+
   const numberAll = (list, prefix) => {
     const counters = {}
     ;[...list]
@@ -1266,6 +1498,8 @@ export function buildSeedData() {
   numberAll(qcInspections, 'QC')
   numberAll(receipts, 'RCT')
   numberAll(payments, 'PAY')
+  numberAll(leaveApplications, 'LV')
+  numberAll(payrollRuns, 'SAL')
 
   let state = {
     version: DATA_VERSION,
@@ -1276,6 +1510,7 @@ export function buildSeedData() {
     stockIns, stockOuts, stockTransfers, stockAdjustments,
     boms, productionOrders, materialIssues, productionEntries, wastages,
     routings, stageEntries, jobWorkOrders, jobWorkReceipts, qcInspections,
+    employees, leaveTypes, holidays, attendance, leaveApplications, payrollRuns,
     receipts, payments, users, roles, loginActivity, settings,
     notifications: [], activities: [], stockMoves: [],
   }

@@ -297,12 +297,18 @@ function buildLedger(openingBalance, entries, from, to, nature) {
 }
 
 /* ---------------- Cash / bank ---------------- */
+/** Salary paid out of cash / bank accounts, one row per account per paid salary sheet. */
+export const salaryPayouts = (state) =>
+  (state.payrollRuns || [])
+    .filter((r) => r.status === 'Paid')
+    .flatMap((r) => (r.disbursements || []).map((d, i) => ({ id: `${r.id}-${i}`, runId: r.id, number: r.number, month: r.month, date: r.paidOn, accountId: d.accountId, amount: d.amount, createdAt: r.updatedAt || r.createdAt })))
+
 export const cashBankSummary = (state, { from, to } = {}) => {
   const accounts = state.settings.accounts || []
   return accounts.map((acc) => {
     const inRange = (d) => (!from || d >= from) && (!to || d <= to)
     const rec = state.receipts.filter((r) => r.accountId === acc.id)
-    const pay = state.payments.filter((p) => p.accountId === acc.id)
+    const pay = [...state.payments.filter((p) => p.accountId === acc.id), ...salaryPayouts(state).filter((p) => p.accountId === acc.id)]
     const before = (list) => list.filter((x) => from && x.date < from).reduce((a, x) => a + Number(x.amount), 0)
     const within = (list) => list.filter((x) => inRange(x.date)).reduce((a, x) => a + Number(x.amount), 0)
     const opening = Number(acc.openingBalance) + before(rec) - before(pay)

@@ -2,7 +2,7 @@
  * Sidebar navigation. Every path here maps to a real page (no dead links).
  * `module` ties the entry to the role permission matrix.
  */
-import { BarChart3, Boxes, ClipboardCheck, Database, Factory, Landmark, LayoutDashboard, Settings, ShieldCheck, ShoppingCart, Receipt } from 'lucide-react'
+import { BarChart3, Boxes, CalendarCheck, ClipboardCheck, Database, Factory, Landmark, LayoutDashboard, Settings, ShieldCheck, ShoppingCart, Receipt } from 'lucide-react'
 
 export const NAV = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard', module: 'Dashboard' },
@@ -17,6 +17,7 @@ export const NAV = [
       { label: 'Warehouses', to: '/masters/warehouses' },
       { label: 'Customers', to: '/masters/customers' },
       { label: 'Suppliers', to: '/masters/suppliers' },
+      { label: 'Employees', to: '/masters/employees', module: 'HR' },
     ],
   },
   {
@@ -70,6 +71,19 @@ export const NAV = [
       { label: 'QC Dashboard', to: '/quality', end: true },
       { label: 'Inspections', to: '/quality/inspections' },
       { label: 'QC Plans', to: '/quality/plans' },
+    ],
+  },
+  {
+    key: 'hr', label: 'HR & Payroll', icon: CalendarCheck, base: '/hr', module: 'HR',
+    children: [
+      { label: 'Attendance Dashboard', to: '/hr', end: true },
+      { label: 'Mark Attendance', to: '/hr/attendance' },
+      { label: 'Attendance Register', to: '/hr/register' },
+      { label: 'Leave Applications', to: '/hr/leaves' },
+      { label: 'Leave Types', to: '/hr/leave-types' },
+      { label: 'Holidays', to: '/hr/holidays' },
+      { label: 'Salary / Payroll', to: '/hr/payroll', module: 'Payroll' },
+      { label: 'Employees', to: '/masters/employees' },
     ],
   },
   {

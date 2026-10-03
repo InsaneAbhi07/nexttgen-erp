@@ -30,6 +30,8 @@ const STATUS_TONES = {
   'In Stock': 'green', 'Low Stock': 'amber', 'Out of Stock': 'red',
   // job work & quality
   'Accepted with Deviation': 'amber', Rework: 'amber', Pass: 'green', Fail: 'red', Closed: 'gray',
+  // HR
+  Present: 'green', Absent: 'red', 'Half Day': 'amber', 'On Leave': 'violet', 'Weekly Off': 'gray', Holiday: 'teal',
   'In-house': 'teal', 'Job Work': 'violet', Incoming: 'blue', 'In-process': 'violet', Final: 'teal', 'Pending QC': 'amber',
 }
 

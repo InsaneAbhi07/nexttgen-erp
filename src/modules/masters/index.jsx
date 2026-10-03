@@ -7,6 +7,7 @@ import { BrandsPage, CategoriesPage, UnitsPage } from './SimpleMasters.jsx'
 import { CustomersPage, SuppliersPage } from './PartyPages.jsx'
 import VariantsPage from './VariantsPage.jsx'
 import VariantFamilyView from './VariantFamilyView.jsx'
+import EmployeesPage from './EmployeesPage.jsx'
 
 export default function MastersModule() {
   return (
@@ -21,6 +22,7 @@ export default function MastersModule() {
       <Route path="warehouses" element={<WarehousesPage />} />
       <Route path="customers" element={<CustomersPage />} />
       <Route path="suppliers" element={<SuppliersPage />} />
+      <Route path="employees" element={<EmployeesPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   )

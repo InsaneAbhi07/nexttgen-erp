@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { ArrowDownLeft, ArrowUpRight, Banknote, Landmark, Scale, Wallet } from 'lucide-react'
 import { useErp } from '../../store/ErpStore.jsx'
-import { byId, cashBankSummary } from '../../store/selectors.js'
+import { byId, cashBankSummary, salaryPayouts } from '../../store/selectors.js'
 import { Badge, Button, Card, DataTable, DateRange, DocNo, PageHeader, Select, StatCard, presetRange, inDateRange } from '../../components/ui/index.js'
 import ChartTooltip from '../../components/common/ChartTooltip.jsx'
 import { CHART, axisProps } from '../../config/theme.js'
@@ -31,9 +31,11 @@ export default function CashBankPage() {
   const txns = useMemo(() => {
     const customers = byId(state.customers)
     const suppliers = byId(state.suppliers)
+    const accountById = byId(state.settings.accounts || [])
     const list = [
       ...state.receipts.map((r) => ({ ...r, kind: 'Receipt', inflow: Number(r.amount), outflow: 0, party: customers.get(r.customerId)?.name, link: `/accounts/receipts?view=${r.id}` })),
       ...state.payments.map((p) => ({ ...p, kind: 'Payment', inflow: 0, outflow: Number(p.amount), party: suppliers.get(p.supplierId)?.name, link: `/accounts/payments?view=${p.id}` })),
+      ...salaryPayouts(state).map((p) => ({ ...p, kind: 'Salary', inflow: 0, outflow: Number(p.amount), party: 'Employees', mode: accountById.get(p.accountId)?.type === 'Cash' ? 'Cash' : 'Bank', link: `/hr/payroll/${p.runId}` })),
     ]
       .filter((t) => inDateRange(t.date, range) && (!accountId || t.accountId === accountId))
       .sort((a, b) => (a.date === b.date ? ((a.createdAt || '') < (b.createdAt || '') ? -1 : 1) : a.date < b.date ? -1 : 1))
@@ -62,7 +64,7 @@ export default function CashBankPage() {
   const columns = [
     { key: 'date', header: 'Date', sortable: false, render: (r) => <span className="nowrap">{fmtDate(r.date)}</span> },
     { key: 'number', header: 'Voucher', sortable: false, render: (r) => <DocNo to={r.link}>{r.number}</DocNo> },
-    { key: 'party', header: 'Party', sortable: false, render: (r) => <div><div className="cell-primary">{r.party}</div><div className="cell-secondary">{r.kind === 'Receipt' ? 'Customer receipt' : 'Supplier payment'}</div></div> },
+    { key: 'party', header: 'Party', sortable: false, render: (r) => <div><div className="cell-primary">{r.party}</div><div className="cell-secondary">{r.kind === 'Receipt' ? 'Customer receipt' : r.kind === 'Salary' ? 'Salary payout' : 'Supplier payment'}</div></div> },
     { key: 'mode', header: 'Mode', sortable: false, render: (r) => <Badge tone={MODE_TONE[r.mode]}>{r.mode}</Badge> },
     { key: 'account', header: 'Account', sortable: false, accessor: (r) => accounts.get(r.accountId)?.name, render: (r) => <span className="small">{accounts.get(r.accountId)?.name}</span> },
     { key: 'inflow', header: 'Receipt', align: 'right', sortable: false, accessor: (r) => r.inflow, render: (r) => <span className="num nowrap text-green">{r.inflow ? inr(r.inflow) : ''}</span> },

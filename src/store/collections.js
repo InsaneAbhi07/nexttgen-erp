@@ -51,6 +51,14 @@ export const COLLECTIONS = {
   // Quality
   qcInspections: { label: 'QC Inspection', module: 'Quality', prefix: 'QC', idPrefix: 'qc', route: (r) => `/quality/inspections/${r.id}` },
 
+  // HR & payroll
+  employees: { label: 'Employee', module: 'HR', idPrefix: 'emp', route: (r) => `/masters/employees?view=${r.id}` },
+  leaveTypes: { label: 'Leave Type', module: 'HR', idPrefix: 'lt', route: () => '/hr/leave-types' },
+  holidays: { label: 'Holiday', module: 'HR', idPrefix: 'hol', route: () => '/hr/holidays' },
+  attendance: { label: 'Attendance', module: 'HR', idPrefix: 'att', route: (r) => `/hr/attendance?date=${r.date}` },
+  leaveApplications: { label: 'Leave Application', module: 'HR', prefix: 'LV', idPrefix: 'lv', route: (r) => `/hr/leaves?view=${r.id}` },
+  payrollRuns: { label: 'Salary Sheet', module: 'Payroll', prefix: 'SAL', idPrefix: 'sal', route: (r) => `/hr/payroll/${r.id}` },
+
   // Accounts
   receipts: { label: 'Customer Receipt', module: 'Accounts', prefix: 'RCT', idPrefix: 'rct', route: () => '/accounts/receipts' },
   payments: { label: 'Supplier Payment', module: 'Accounts', prefix: 'PAY', idPrefix: 'pay', route: () => '/accounts/payments' },

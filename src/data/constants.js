@@ -59,6 +59,24 @@ export const QC_INSPECTORS = ['Deepak Chauhan', 'Suresh Yadav', 'Mohd. Irfan']
 export const JOB_WORK_WAREHOUSE = 'wh-jbw'
 export const SCRAP_WAREHOUSE = 'wh-scr'
 export const DEPARTMENTS = ['Management', 'Operations', 'Accounts', 'Purchase', 'Sales', 'Stores', 'Production', 'Quality', 'Maintenance', 'Packaging']
+/* HR — attendance, leave and payroll */
+export const DESIGNATIONS = ['Plant Manager', 'Accounts Executive', 'Purchase Executive', 'Sales Executive', 'Store Keeper', 'Production Supervisor', 'QC Inspector', 'Machine Operator', 'Die-casting Operator', 'Buffing Operator', 'Assembly Worker', 'Packer', 'Helper', 'Driver', 'HR & Admin Executive', 'Dispatch In-charge', 'Maintenance Fitter']
+export const EMPLOYMENT_TYPES = ['Permanent', 'Probation', 'Contract', 'Daily Wage']
+export const SALARY_TYPES = ['Monthly', 'Daily']
+export const GENDERS = ['Male', 'Female', 'Other']
+export const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+export const SHIFTS = [
+  { name: 'General', start: '09:30', end: '18:00' },
+  { name: 'Morning', start: '06:00', end: '14:00' },
+  { name: 'Evening', start: '14:00', end: '22:00' },
+]
+export const GRACE_MINUTES = 10
+export const HOLIDAY_TYPES = ['National', 'Festival', 'Restricted']
+export const LEAVE_STATUS = ['Pending', 'Approved', 'Rejected', 'Cancelled']
+export const PAYROLL_STATUS = ['Draft', 'Approved', 'Paid']
+/* Statutory rates used by the payroll engine (demo values) */
+export const STATUTORY = { pfRate: 12, pfWageCeiling: 15000, esiEmployee: 0.75, esiEmployer: 3.25, esiWageLimit: 21000, otMultiplier: 2 }
+
 export const SALES_PERSONS = ['Neha Gupta', 'Karan Singh', 'Arjun Mehra']
 export const TRANSPORTERS = ['VRL Logistics', 'Gati Ltd.', 'TCI Freight', 'Safexpress', 'Own Vehicle', 'Delhivery Freight']
 
@@ -74,7 +92,7 @@ export const ROLES = [
   'Employee',
 ]
 
-export const PERMISSION_MODULES = ['Dashboard', 'Masters', 'Purchase', 'Sales', 'Inventory', 'Production', 'Quality', 'Accounts', 'Reports', 'Users & Access', 'Settings']
+export const PERMISSION_MODULES = ['Dashboard', 'Masters', 'Purchase', 'Sales', 'Inventory', 'Production', 'Quality', 'HR', 'Payroll', 'Accounts', 'Reports', 'Users & Access', 'Settings']
 export const PERMISSION_TYPES = ['view', 'add', 'edit', 'delete', 'approve', 'print', 'export']
 
 export const STATUS = {

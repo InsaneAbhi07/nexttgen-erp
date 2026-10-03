@@ -70,7 +70,7 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
                 </button>
                 {isOpen && (
                   <div className="nav-children">
-                    {g.children.map((c) => (
+                    {g.children.filter((c) => !c.module || can(c.module)).map((c) => (
                       <NavLink key={c.to} to={c.to} end={c.end} className={({ isActive: a }) => `nav-child ${a ? 'active' : ''}`}>
                         {c.label}
                       </NavLink>
